@@ -7,7 +7,7 @@ function unsetEnv(key: string): void {
 
 describe("buildSandboxEnv", () => {
 	it("includes only allowlisted environment variables", () => {
-		const env = buildSandboxEnv("/workspace");
+		const env = buildSandboxEnv("/workspace", "ws_test");
 		const keys = Object.keys(env);
 
 		const allowlist = [
@@ -28,7 +28,7 @@ describe("buildSandboxEnv", () => {
 	});
 
 	it("sets HOME to the provided workspace directory", () => {
-		const env = buildSandboxEnv("/my/workspace");
+		const env = buildSandboxEnv("/my/workspace", "ws_test");
 		expect(env.HOME).toBe("/my/workspace");
 	});
 
@@ -47,7 +47,7 @@ describe("buildSandboxEnv", () => {
 		}
 
 		try {
-			const env = buildSandboxEnv("/workspace");
+			const env = buildSandboxEnv("/workspace", "ws_test");
 			for (const key of secrets) {
 				expect(env).not.toHaveProperty(key);
 			}
@@ -59,7 +59,7 @@ describe("buildSandboxEnv", () => {
 	});
 
 	it("passes through PATH from host", () => {
-		const env = buildSandboxEnv("/workspace");
+		const env = buildSandboxEnv("/workspace", "ws_test");
 		expect(env.PATH).toBe(process.env.PATH);
 	});
 
@@ -70,7 +70,7 @@ describe("buildSandboxEnv", () => {
 		unsetEnv("TERM");
 
 		try {
-			const env = buildSandboxEnv("/workspace");
+			const env = buildSandboxEnv("/workspace", "ws_test");
 			expect(env.LANG).toBe("en_US.UTF-8");
 			expect(env.TERM).toBe("xterm-256color");
 		} finally {

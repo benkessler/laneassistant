@@ -1,9 +1,9 @@
-project_id  = "openviktor-prod"
+project_id  = "laneassistant-prod"
 region      = "europe-west1"
-domain      = "api.openviktor.com"
+domain      = "api.your-domain.com"
 db_tier     = "db-f1-micro"
 db_password = "CHANGE_ME"
-github_repo = "zggf-zggf/openviktor"
+github_repo = "benkessler/laneassistant"
 
 cloud_run_min_instances = 1
 cloud_run_max_instances = 3

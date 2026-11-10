@@ -5,8 +5,8 @@ import type {
 	LLMResponse,
 	LLMToolDefinition,
 	StopReason,
-} from "@openviktor/shared";
-import { LLMError } from "@openviktor/shared";
+} from "@laneassistant/shared";
+import { LLMError } from "@laneassistant/shared";
 import { calculateCostCents } from "../pricing.js";
 import { withRetry } from "../retry.js";
 
@@ -78,7 +78,7 @@ function buildToolUseIdMap(messages: LLMMessage[]): Map<string, string> {
 }
 
 function toolResultToPart(
-	block: import("@openviktor/shared").ToolResultBlock,
+	block: import("@laneassistant/shared").ToolResultBlock,
 	toolIdToName: Map<string, string>,
 ): GeminiPart {
 	const toolName = toolIdToName.get(block.tool_use_id) ?? "unknown";
@@ -96,7 +96,7 @@ function toolResultToPart(
 }
 
 function convertUserBlocks(
-	content: import("@openviktor/shared").ContentBlock[],
+	content: import("@laneassistant/shared").ContentBlock[],
 	toolIdToName: Map<string, string>,
 ): GeminiPart[] {
 	const parts: GeminiPart[] = [];
@@ -111,7 +111,7 @@ function convertUserBlocks(
 }
 
 function convertAssistantBlocks(
-	content: import("@openviktor/shared").ContentBlock[],
+	content: import("@laneassistant/shared").ContentBlock[],
 ): GeminiPart[] {
 	const parts: GeminiPart[] = [];
 	for (const block of content) {

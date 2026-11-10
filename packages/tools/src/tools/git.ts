@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import type { LLMToolDefinition, ToolResult } from "@openviktor/shared";
+import type { LLMToolDefinition, ToolResult } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 import { buildSandboxEnv } from "../sandbox-env.js";
 import { resolveSafePath, resolveSafePathStrict } from "../workspace.js";
@@ -143,7 +143,7 @@ export function createGitExecutors(githubToken?: string): {
 				typeof args.working_dir === "string" ? args.working_dir : ".",
 			);
 			return runCommand("git", args.args, resolvedDir, {
-				...buildSandboxEnv(ctx.workspaceDir),
+				...buildSandboxEnv(ctx.workspaceDir, ctx.workspaceId),
 				GIT_ASKPASS: "echo",
 				GIT_TERMINAL_PROMPT: "0",
 				...(githubToken ? { GITHUB_TOKEN: githubToken } : {}),
@@ -172,7 +172,7 @@ export function createGitExecutors(githubToken?: string): {
 				typeof args.working_dir === "string" ? args.working_dir : ".",
 			);
 			return runCommand("gh", args.args, resolvedDir, {
-				...buildSandboxEnv(ctx.workspaceDir),
+				...buildSandboxEnv(ctx.workspaceDir, ctx.workspaceId),
 				...(githubToken ? { GH_TOKEN: githubToken } : {}),
 				NO_COLOR: "1",
 			});

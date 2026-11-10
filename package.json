@@ -1,5 +1,5 @@
 {
-	"name": "openviktor",
+	"name": "laneassistant",
 	"private": true,
 	"workspaces": ["apps/*", "packages/*"],
 	"scripts": {
@@ -10,10 +10,11 @@
 		"typecheck": "turbo run typecheck",
 		"test": "turbo run test",
 		"test:coverage": "turbo run test:coverage",
-		"db:generate": "bun run --filter @openviktor/db db:generate",
-		"db:migrate": "bun run --filter @openviktor/db db:migrate",
-		"db:studio": "bun run --filter @openviktor/db db:studio",
+		"db:generate": "bun run --filter @laneassistant/db db:generate",
+		"db:migrate": "bun run --filter @laneassistant/db db:migrate",
+		"db:studio": "bun run --filter @laneassistant/db db:studio",
 		"format": "biome format --write .",
+		"setup": "bun apps/bot/src/cli/setup.ts",
 		"clean": "turbo run clean"
 	},
 	"devDependencies": {

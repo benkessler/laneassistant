@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { Logger } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { Logger } from "@laneassistant/shared";
 import type { App } from "@slack/bolt";
 
 export interface InteractionContext {

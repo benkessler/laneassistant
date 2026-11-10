@@ -9,7 +9,7 @@ terraform {
   }
 
   backend "gcs" {
-    bucket = "openviktor-tfstate"
+    bucket = "laneassistant-tfstate"
     prefix = "terraform/state"
   }
 }

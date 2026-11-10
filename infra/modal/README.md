@@ -20,7 +20,7 @@ Bot (Slack + Agent loop) → Tool Gateway → ModalToolBackend → HTTP → Moda
 
 2. Create a Modal secret with your tool auth token:
    ```bash
-   modal secret create openviktor-tools TOOL_TOKEN=your-secret-token
+   modal secret create laneassistant-tools TOOL_TOKEN=your-secret-token
    ```
 
 3. Deploy the app:
@@ -31,7 +31,7 @@ Bot (Slack + Agent loop) → Tool Gateway → ModalToolBackend → HTTP → Moda
 4. Configure the bot:
    ```bash
    TOOL_BACKEND=modal
-   MODAL_ENDPOINT_URL=https://your-workspace--openviktor-tools-execute.modal.run
+   MODAL_ENDPOINT_URL=https://your-workspace--laneassistant-tools-execute.modal.run
    MODAL_AUTH_TOKEN=your-secret-token
    ```
 

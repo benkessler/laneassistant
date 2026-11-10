@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@openviktor/db";
+import type { PrismaClient } from "@laneassistant/db";
 import { calculateNextRun } from "./cron-parser.js";
 
 const DEFAULT_DISCOVERY_SCHEDULE = "1 9 * * 2,5";

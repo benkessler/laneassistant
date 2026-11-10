@@ -21,8 +21,9 @@ describe("loadConfig", () => {
 		const config = loadConfig(validEnv);
 		expect(config.SLACK_BOT_TOKEN).toBe("xoxb-test-token");
 		expect(config.ANTHROPIC_API_KEY).toBe("sk-ant-test-key");
-		expect(config.DEFAULT_MODEL).toBe("claude-sonnet-4-20250514");
-		expect(config.MAX_TOKENS).toBe(4096);
+		expect(config.DEFAULT_MODEL).toBe("claude-opus-5-5");
+		expect(config.MAX_TOKENS).toBe(16_000);
+		expect(config.LLM_EFFORT).toBe("high");
 	});
 
 	it("applies defaults for optional values", () => {

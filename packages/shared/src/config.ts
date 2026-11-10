@@ -27,7 +27,11 @@ const envSchema = z
 		// Dashboard auth
 		DASHBOARD_AUTH_MODE: z.enum(["basic", "slack-oauth"]).optional(),
 		DASHBOARD_USERNAME: z.string().default("admin"),
-		DASHBOARD_PASSWORD: z.string().optional(),
+		DASHBOARD_PASSWORD: z
+			.string()
+			.min(12, "DASHBOARD_PASSWORD must be at least 12 characters")
+			.refine((v) => v !== "changeme", "DASHBOARD_PASSWORD must not be the example value")
+			.optional(),
 
 		// Encryption
 		ENCRYPTION_KEY: z
@@ -40,8 +44,9 @@ const envSchema = z
 		OPENAI_API_KEY: z.string().optional(),
 		GOOGLE_AI_API_KEY: z.string().optional(),
 		OLLAMA_BASE_URL: z.string().url().optional(),
-		DEFAULT_MODEL: z.string().default("claude-sonnet-4-20250514"),
-		MAX_TOKENS: z.coerce.number().default(4096),
+		DEFAULT_MODEL: z.string().default("claude-opus-5-5"),
+		LLM_EFFORT: z.enum(["low", "medium", "high", "xhigh", "max"]).default("high"),
+		MAX_TOKENS: z.coerce.number().default(16_000),
 
 		// Database
 		DATABASE_URL: z.string().url(),
@@ -84,14 +89,6 @@ const envSchema = z
 			.enum(["true", "false"])
 			.default("true")
 			.transform((v) => v === "true"),
-
-		// Spaces
-		CONVEX_ACCESS_TOKEN: z.string().optional(),
-		CONVEX_TEAM_ID: z.string().optional(),
-		VERCEL_TOKEN: z.string().optional(),
-		VERCEL_ORG_ID: z.string().optional(),
-		SPACES_DOMAIN: z.string().default("apps.openviktor.com"),
-		RESEND_API_KEY: z.string().optional(),
 
 		// Pipedream Connect
 		PIPEDREAM_CLIENT_ID: z.string().optional(),

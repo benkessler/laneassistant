@@ -1,6 +1,6 @@
 ---
 name: general_tools
-description: Search the web, send emails, generate images, convert files to markdown, and look up library docs. Use when a task needs one of these general-purpose tools.
+description: Search the web, generate images, convert files to markdown, and look up library docs. Use when a task needs one of these general-purpose tools. Email is not available here — use a connected Gmail or Outlook integration instead.
 ---
 
 These tools are only available via Python scripts (`from sdk.tools.<module> import <function>`). They are *not* in your native tool list, so actively remember they exist.

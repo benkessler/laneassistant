@@ -1,12 +1,12 @@
-import type { PrismaClient } from "@openviktor/db";
+import type { PrismaClient } from "@laneassistant/db";
 import {
 	ConcurrencyExceededError,
 	type Logger,
 	ThreadLockedError,
 	chunkMessage,
 	markdownToMrkdwn,
-} from "@openviktor/shared";
-import { appendSlackLog } from "@openviktor/tools";
+} from "@laneassistant/shared";
+import { appendSlackLog } from "@laneassistant/tools";
 import type { App } from "@slack/bolt";
 import type { AgentRunner } from "../agent/runner.js";
 import {
@@ -17,7 +17,6 @@ import {
 } from "../cron/onboarding.js";
 import { seedBuiltinSkills } from "../skills/seed.js";
 import { fetchActiveThreads } from "../thread/index.js";
-import { registerWorkspaceToken } from "../tool-gateway/server.js";
 import {
 	type SlackClient,
 	resolveMember,
@@ -52,7 +51,6 @@ async function resolveContext(
 ) {
 	const slackClient = client as unknown as SlackClient;
 	const workspace = await resolveWorkspace(ctx.prisma, slackClient, teamId, botToken, botUserId);
-	registerWorkspaceToken("local", workspace.id);
 	const member = await resolveMember(ctx.prisma, slackClient, workspace.id, slackUserId);
 	return { workspace, member };
 }

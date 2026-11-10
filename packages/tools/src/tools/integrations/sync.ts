@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { PipedreamClient } from "@openviktor/integrations";
+import type { PrismaClient } from "@laneassistant/db";
+import type { PipedreamClient } from "@laneassistant/integrations";
 import type { ToolRegistry } from "../../registry.js";
 import type { IntegrationSyncHandler } from "./management.js";
 import { registerIntegrationTools, unregisterIntegrationTools } from "./pipedream-tools.js";

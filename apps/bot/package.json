@@ -1,5 +1,5 @@
 {
-	"name": "@openviktor/bot",
+	"name": "@laneassistant/bot",
 	"version": "0.0.1",
 	"private": true,
 	"type": "module",
@@ -16,10 +16,10 @@
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.78.0",
-		"@openviktor/db": "workspace:*",
-		"@openviktor/integrations": "workspace:*",
-		"@openviktor/shared": "workspace:*",
-		"@openviktor/tools": "workspace:*",
+		"@laneassistant/db": "workspace:*",
+		"@laneassistant/integrations": "workspace:*",
+		"@laneassistant/shared": "workspace:*",
+		"@laneassistant/tools": "workspace:*",
 		"@slack/bolt": "^3.22.0",
 		"@slack/web-api": "6.13.0",
 		"cron-parser": "^5.5.0",

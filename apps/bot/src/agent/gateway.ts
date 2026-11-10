@@ -5,7 +5,7 @@ import type {
 	LLMProvider,
 	LLMResponse,
 	LLMToolDefinition,
-} from "@openviktor/shared";
+} from "@laneassistant/shared";
 import { createProvider, resolveProvider } from "./providers/index.js";
 
 export interface ChatOptions {

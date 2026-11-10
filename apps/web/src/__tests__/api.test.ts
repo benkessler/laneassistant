@@ -39,7 +39,7 @@ describe("API client", () => {
 	});
 
 	it("includes workspace ID in X-Workspace-Id header when set", async () => {
-		localStorage.setItem("ov_workspace_id", "ws-123");
+		localStorage.setItem("la_workspace_id", "ws-123");
 		mockJsonResponse({});
 		await api.getOverview();
 		const headers = mockFetch.mock.calls[0][1].headers;

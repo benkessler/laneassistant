@@ -10,9 +10,9 @@ variable "region" {
 }
 
 variable "domain" {
-  description = "API domain (e.g., api.openviktor.com)"
+  description = "API domain (e.g., api.your-domain.com)"
   type        = string
-  default     = "api.openviktor.com"
+  default     = "api.your-domain.com"
 }
 
 variable "db_tier" {

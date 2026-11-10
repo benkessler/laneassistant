@@ -1,4 +1,4 @@
-import type { ToolResult } from "@openviktor/shared";
+import type { ToolResult } from "@laneassistant/shared";
 import type { ToolExecutionContext } from "./registry.js";
 
 export interface ToolBackend {

@@ -8,7 +8,7 @@ class AuthError extends Error {
 }
 
 async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
-	const workspaceId = localStorage.getItem("ov_workspace_id");
+	const workspaceId = localStorage.getItem("la_workspace_id");
 	const headers: HeadersInit = {
 		"Content-Type": "application/json",
 		...(workspaceId ? { "X-Workspace-Id": workspaceId } : {}),
@@ -413,51 +413,4 @@ export function getSkills(params: {
 	if (params.page) sp.set("page", String(params.page));
 	if (params.limit) sp.set("limit", String(params.limit));
 	return fetchApi(`/skills?${sp}`);
-}
-
-// ─── Phase 6 — Spaces ───────────────────────────────────
-
-export interface SpaceSummary {
-	id: string;
-	name: string;
-	status: string;
-	description: string | null;
-	domain: string | null;
-	previewUrl: string | null;
-	productionUrl: string | null;
-	lastDeployedAt: string | null;
-	createdAt: string;
-}
-
-export interface SpaceDeploymentSummary {
-	id: string;
-	environment: string;
-	version: number;
-	status: string;
-	url: string | null;
-	vercelUrl: string | null;
-	commitMessage: string | null;
-	durationMs: number | null;
-	createdAt: string;
-}
-
-export interface SpaceDetail extends SpaceSummary {
-	sandboxPath: string;
-	convexUrlDev: string | null;
-	convexUrlProd: string | null;
-	deployments: SpaceDeploymentSummary[];
-}
-
-export function getSpaces(): Promise<{ spaces: SpaceSummary[] }> {
-	return fetchApi("/spaces");
-}
-
-export function getSpaceDetail(name: string): Promise<SpaceDetail> {
-	return fetchApi(`/spaces/${encodeURIComponent(name)}`);
-}
-
-export function getSpaceDeployments(
-	name: string,
-): Promise<{ deployments: SpaceDeploymentSummary[] }> {
-	return fetchApi(`/spaces/${encodeURIComponent(name)}/deployments`);
 }

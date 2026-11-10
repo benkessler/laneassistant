@@ -4,9 +4,11 @@
 .git
 .github
 .claude
-.omc
-.vercel
 node_modules
+**/node_modules
+apps/web/dist
 infra
 docs
+# Skip docs, but keep built-in skill definitions, which are loaded at runtime.
 *.md
+!apps/bot/src/skills/definitions/*.md

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { type ConditionContext, createConditionHelpers, evaluateCondition } from "../condition.js";
 
-vi.mock("@openviktor/tools", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("@openviktor/tools")>();
+vi.mock("@laneassistant/tools", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@laneassistant/tools")>();
 	return { ...actual, ensureWorkspace: async () => "/tmp" };
 });
 

@@ -1,6 +1,6 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { EnvConfig, Logger } from "@openviktor/shared";
-import { decrypt, isManaged, isSelfHosted } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { EnvConfig, Logger } from "@laneassistant/shared";
+import { decrypt, isManaged, isSelfHosted } from "@laneassistant/shared";
 import { App } from "@slack/bolt";
 import { WebClient } from "@slack/web-api";
 import { createSlackLoggerAdapter } from "./app.js";

@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { Logger } from "@openviktor/shared";
+import type { Logger } from "@laneassistant/shared";
 import type { WebClient } from "@slack/web-api";
 import type {
 	ConnectionManager,

@@ -19,6 +19,8 @@ export type {
 	TextBlock,
 	ToolUseBlock,
 	ToolResultBlock,
+	ThinkingBlock,
+	RedactedThinkingBlock,
 	ContentBlock,
 	LLMToolDefinition,
 	StopReason,

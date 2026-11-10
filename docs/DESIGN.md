@@ -1,20 +1,22 @@
-# OpenViktor Admin Dashboard — Design System
+# Lane Assistant Admin Dashboard — Design System
 
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│  Vercel / CDN   │     │  Serverless API   │     │   Bot Service    │
-│  (static SPA)   │────▶│  Gateway (thin)   │────▶│  (Bun + Prisma)  │
-│  React + Vite   │     │  /api/* proxy     │     │  dashboard-api   │
-└─────────────────┘     └──────────────────┘     └──────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  Bot service (Bun, port 3001)                                │
+│   ├─ /           built SPA from apps/web/dist (React + Vite) │
+│   ├─ /api/*      dashboard API (dashboard-api.ts)            │
+│   ├─ /slack/*    Slack Events API + OAuth (managed mode)     │
+│   └─ /v1/tools   tool gateway (per-workspace signed tokens)  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 **Key constraints:**
 - The web dashboard never connects to the database directly
 - All data flows through the bot service's dashboard API (`dashboard-api.ts`)
-- The SPA is a static build, deployable to Vercel or any CDN
-- Auth: API key or Slack OAuth token passed through the gateway
+- The SPA and API share one origin, so no CORS is needed; in development Vite proxies `/api` and `/slack` to the bot
+- Auth: username/password session cookie (basic mode) or Slack OAuth
 
 ## Tech Stack
 

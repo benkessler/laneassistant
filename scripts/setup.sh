@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-echo "=== OpenViktor Setup ==="
+echo "=== Lane Assistant Setup ==="
 echo ""
 
 # ─── Prerequisites ──────────────────────────────────────
@@ -35,9 +35,9 @@ echo ""
 
 # ─── .env ───────────────────────────────────────────────
 if [ ! -f ".env" ]; then
-  if [ -f "docker/.env.example" ]; then
-    cp docker/.env.example .env
-    echo "Created .env from docker/.env.example"
+  if [ -f ".env.example" ]; then
+    cp .env.example .env
+    echo "Created .env from .env.example"
     echo "Please edit .env with your Slack and Anthropic credentials."
     echo ""
   fi
@@ -61,7 +61,7 @@ docker compose -f docker/docker-compose.yml up -d
 
 echo "Waiting for PostgreSQL to be ready..."
 for i in $(seq 1 30); do
-  if docker compose -f docker/docker-compose.yml exec -T postgres pg_isready -U openviktor &> /dev/null; then
+  if docker compose -f docker/docker-compose.yml exec -T postgres pg_isready -U laneassistant &> /dev/null; then
     echo "PostgreSQL is ready!"
     break
   fi
@@ -86,5 +86,5 @@ echo ""
 echo "Next steps:"
 echo "  1. Edit .env with your Slack and Anthropic credentials"
 echo "  2. Run: ./scripts/dev.sh"
-echo "  3. Invite @OpenViktor to a Slack channel and mention it"
+echo "  3. Invite @Lane Assistant to a Slack channel and mention it"
 echo ""

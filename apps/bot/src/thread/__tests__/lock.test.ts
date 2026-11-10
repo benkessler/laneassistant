@@ -1,4 +1,4 @@
-import { ThreadPhase } from "@openviktor/shared";
+import { ThreadPhase } from "@laneassistant/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ThreadLock } from "../lock.js";
 

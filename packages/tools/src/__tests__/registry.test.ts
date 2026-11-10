@@ -1,4 +1,4 @@
-import type { ToolResult } from "@openviktor/shared";
+import type { ToolResult } from "@laneassistant/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type ToolExecutionContext, type ToolExecutor, ToolRegistry } from "../registry.js";
 

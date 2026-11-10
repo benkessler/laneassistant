@@ -1,14 +1,14 @@
-import { prisma } from "@openviktor/db";
-import { PipedreamClient } from "@openviktor/integrations";
-import type { PipedreamConfig } from "@openviktor/integrations";
-import { createLogger, isManaged, isSelfHosted, loadConfig } from "@openviktor/shared";
+import { prisma } from "@laneassistant/db";
+import { PipedreamClient } from "@laneassistant/integrations";
+import type { PipedreamConfig } from "@laneassistant/integrations";
+import { createLogger, isManaged, isSelfHosted, loadConfig } from "@laneassistant/shared";
 import {
 	ConcurrencyExceededError,
 	type Logger,
 	ThreadLockedError,
 	chunkMessage,
 	markdownToMrkdwn,
-} from "@openviktor/shared";
+} from "@laneassistant/shared";
 import {
 	LocalToolBackend,
 	ModalToolBackend,
@@ -29,15 +29,13 @@ import {
 	listWorkspaceConnectionsDefinition,
 	registerDbTools,
 	registerDynamicSlackTools,
-	registerSpacesTools,
 	registerThreadOrchestrationTools,
 	restoreToolsFromDb,
 	submitPermissionRequestDefinition,
 	syncWorkspaceConnectionsDefinition,
-} from "@openviktor/tools";
-import type { SpawnAgentRunParams } from "@openviktor/tools";
-import type { RegistryConfig, ToolBackend } from "@openviktor/tools";
-import { ConvexClient, SpacesService, VercelClient } from "@openviktor/tools/spaces";
+} from "@laneassistant/tools";
+import type { SpawnAgentRunParams } from "@laneassistant/tools";
+import type { RegistryConfig, ToolBackend } from "@laneassistant/tools";
 import { LLMGateway } from "./agent/gateway.js";
 import { AnthropicProvider } from "./agent/providers/anthropic.js";
 import { AgentRunner } from "./agent/runner.js";
@@ -57,6 +55,7 @@ import {
 	markOnboardingComplete,
 	seedChannelIntros,
 } from "./cron/onboarding.js";
+import { createDashboardStaticHandler } from "./dashboard-static.js";
 import { IntegrationWatcher } from "./integrations/watcher.js";
 import { seedBuiltinSkills } from "./skills/seed.js";
 import {
@@ -79,13 +78,12 @@ import {
 import { createOAuthHandler } from "./slack/oauth.js";
 import { resolveMember, resolveUserMentions, resolveWorkspace } from "./slack/resolve.js";
 import type { SlackClient } from "./slack/resolve.js";
-import { createSpacesApi } from "./spaces/api.js";
 import { createConcurrencyLimiter } from "./thread/concurrency.js";
 import { fetchActiveThreads } from "./thread/index.js";
 import { ThreadLock } from "./thread/lock.js";
 import { StaleThreadDetector } from "./thread/stale.js";
 import { createDashboardApi } from "./tool-gateway/dashboard-api.js";
-import { createToolGateway, registerWorkspaceToken } from "./tool-gateway/server.js";
+import { createToolGateway } from "./tool-gateway/server.js";
 import { UsageLimiter } from "./usage/limiter.js";
 import { UsageTracker } from "./usage/tracker.js";
 
@@ -95,7 +93,7 @@ function createToolBackend(config: ReturnType<typeof loadConfig>): {
 	backend: ToolBackend;
 	registry: ReturnType<typeof createNativeRegistry>;
 } {
-	let llmProvider: import("@openviktor/shared").LLMProvider | undefined;
+	let llmProvider: import("@laneassistant/shared").LLMProvider | undefined;
 	if (config.ANTHROPIC_API_KEY) {
 		llmProvider = new AnthropicProvider(config.ANTHROPIC_API_KEY);
 	}
@@ -169,10 +167,8 @@ async function main(): Promise<void> {
 
 	const gatewayClient = new ToolGatewayClient({
 		baseUrl: `http://localhost:${gatewayPort}`,
-		token: "local",
 		timeoutMs: config.TOOL_TIMEOUT_MS,
 	});
-	registerWorkspaceToken("local", "default");
 
 	const concurrencyLimiter = await createConcurrencyLimiter(
 		config.MAX_CONCURRENT_RUNS,
@@ -263,36 +259,6 @@ async function main(): Promise<void> {
 		local,
 	);
 	registry.register("list_cron_jobs", listCronJobsDefinition, cronTools.list_cron_jobs, local);
-
-	// Spaces tools
-	let spacesApi: ReturnType<typeof createSpacesApi> | undefined;
-	if (config.CONVEX_ACCESS_TOKEN && config.CONVEX_TEAM_ID && config.VERCEL_TOKEN) {
-		const convexClient = new ConvexClient({
-			accessToken: config.CONVEX_ACCESS_TOKEN,
-			teamId: config.CONVEX_TEAM_ID,
-		});
-		const vercelClient = new VercelClient({
-			token: config.VERCEL_TOKEN,
-			orgId: config.VERCEL_ORG_ID ?? "",
-			domain: config.SPACES_DOMAIN,
-		});
-		const spacesService = new SpacesService({
-			prisma,
-			convex: convexClient,
-			vercel: vercelClient,
-			spacesDir: "/data/workspaces",
-			spacesApiUrl: config.BASE_URL,
-		});
-		registerSpacesTools(registry, spacesService);
-		spacesApi = createSpacesApi({
-			spacesService,
-			registry,
-			logger: createLogger("spaces-api"),
-			defaultTimeoutMs: config.TOOL_TIMEOUT_MS,
-			resendApiKey: config.RESEND_API_KEY,
-		});
-		logger.info("Spaces tools registered");
-	}
 
 	// Pipedream integration tools
 	let integrationWatcher: IntegrationWatcher | undefined;
@@ -501,9 +467,6 @@ async function main(): Promise<void> {
 		const client = connection.getClient() as unknown as SlackClient;
 		const workspaceId = connection.workspaceId;
 		const botUserId = connection.botUserId;
-
-		// Register workspace token for tool gateway
-		registerWorkspaceToken("local", workspaceId);
 
 		if (event.type === "message") {
 			const isDm = event.channelType === "im";
@@ -812,7 +775,6 @@ async function main(): Promise<void> {
 			});
 
 			const prompt = buildProactiveOnboardingPrompt(installerSlackUserId);
-			registerWorkspaceToken("local", workspaceId);
 
 			const result = await runner.run({
 				workspaceId,
@@ -854,21 +816,13 @@ async function main(): Promise<void> {
 		});
 	}
 
-	const corsHeaders: Record<string, string> = {
-		"Access-Control-Allow-Origin": "*",
-		"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-		"Access-Control-Allow-Headers": "Content-Type, Authorization, X-Workspace-Id",
-	};
+	const serveDashboard = config.ENABLE_DASHBOARD ? createDashboardStaticHandler() : null;
 
 	const gatewayServer = Bun.serve({
 		port: gatewayPort,
 		// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: HTTP request router handling all gateway API routes and auth
 		fetch: async (req: Request) => {
 			const url = new URL(req.url, "http://localhost");
-
-			if (req.method === "OPTIONS") {
-				return new Response(null, { status: 204, headers: corsHeaders });
-			}
 
 			// Slack Events API (managed mode)
 			if (url.pathname === "/slack/events" && eventsApiHandler) {
@@ -886,26 +840,19 @@ async function main(): Promise<void> {
 				return oauthHandler.handleCallback(req);
 			}
 
-			// Spaces callback API (deployed apps → Viktor)
-			if (url.pathname.startsWith("/api/viktor-spaces/") && spacesApi) {
-				const response = await spacesApi.fetch(req);
-				for (const [key, value] of Object.entries(corsHeaders)) {
-					response.headers.set(key, value);
-				}
-				return response;
-			}
-
 			// Dashboard API
 			if (url.pathname.startsWith("/api/") && dashboardApi) {
-				const response = await dashboardApi.fetch(req);
-				for (const [key, value] of Object.entries(corsHeaders)) {
-					response.headers.set(key, value);
-				}
-				return response;
+				return dashboardApi.fetch(req);
 			}
 
 			// Tool gateway
-			return gateway.fetch(req);
+			if (url.pathname.startsWith("/v1/") || url.pathname === "/health") {
+				return gateway.fetch(req);
+			}
+
+			// Dashboard UI (built apps/web)
+			const page = serveDashboard ? await serveDashboard(req) : null;
+			return page ?? gateway.fetch(req);
 		},
 	});
 	logger.info(
@@ -937,7 +884,6 @@ async function main(): Promise<void> {
 			botToken,
 			botUserId,
 		);
-		registerWorkspaceToken("local", workspace.id);
 
 		// Register existing Bolt app in ConnectionManager for health checks and dashboard API
 		// (don't create a second SocketModeConnection)
@@ -993,7 +939,10 @@ async function main(): Promise<void> {
 		process.on("SIGTERM", shutdown);
 		process.on("SIGINT", shutdown);
 
-		logger.info({ mode, teamId, workspaceId: workspace.id }, "OpenViktor started (self-hosted)");
+		logger.info(
+			{ mode, teamId, workspaceId: workspace.id },
+			"Lane Assistant started (self-hosted)",
+		);
 	} else {
 		// Managed: use Events API, workspaces connect via OAuth
 		await connectionManager.connectAll();
@@ -1040,7 +989,7 @@ async function main(): Promise<void> {
 
 		logger.info(
 			{ mode, workspaces: connectionManager.connectedCount },
-			"OpenViktor started (managed)",
+			"Lane Assistant started (managed)",
 		);
 	}
 }

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import type { LLMToolDefinition, ToolResult } from "@openviktor/shared";
+import type { LLMToolDefinition, ToolResult } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 import { buildSandboxEnv } from "../sandbox-env.js";
 
@@ -37,7 +37,7 @@ export const bashExecutor: ToolExecutor = async (args, ctx) => {
 			cwd: ctx.workspaceDir,
 			timeout: timeoutMs,
 			env: {
-				...buildSandboxEnv(ctx.workspaceDir),
+				...buildSandboxEnv(ctx.workspaceDir, ctx.workspaceId),
 				PYTHONPATH: ctx.workspaceDir,
 			},
 			stdio: ["ignore", "pipe", "pipe"],

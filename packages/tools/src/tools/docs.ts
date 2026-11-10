@@ -1,4 +1,4 @@
-import type { LLMToolDefinition } from "@openviktor/shared";
+import type { LLMToolDefinition } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 import { resolveSafePath, resolveSafePathStrict } from "../workspace.js";
 

@@ -1,7 +1,7 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { Logger } from "@openviktor/shared";
-import type { ToolBackend } from "@openviktor/tools";
-import { ensureWorkspace } from "@openviktor/tools";
+import type { PrismaClient } from "@laneassistant/db";
+import type { Logger } from "@laneassistant/shared";
+import type { ToolBackend } from "@laneassistant/tools";
+import { ensureWorkspace } from "@laneassistant/tools";
 
 const CONDITION_TIMEOUT_MS = 5_000;
 

@@ -45,9 +45,16 @@ describe("buildSystemPrompt", () => {
 
 	it("includes core identity and guidelines", () => {
 		const prompt = buildSystemPrompt(makeContext());
-		expect(prompt).toContain("OpenViktor");
+		expect(prompt).toContain("Lane Assistant");
 		expect(prompt).toContain("## Guidelines");
 		expect(prompt).toContain("Block Kit");
+	});
+
+	it("includes client confidentiality and external-action approval rules", () => {
+		const prompt = buildSystemPrompt(makeContext());
+		expect(prompt).toContain("## Client Work");
+		expect(prompt).toContain("Never repeat one client's information to another client");
+		expect(prompt).toContain("must go through an approval request first");
 	});
 
 	it("includes startup instructions for read_learnings", () => {

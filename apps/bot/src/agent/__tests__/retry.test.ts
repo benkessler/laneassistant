@@ -1,4 +1,4 @@
-import { LLMError } from "@openviktor/shared";
+import { LLMError } from "@laneassistant/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mapProviderError, withRetry } from "../retry.js";
 

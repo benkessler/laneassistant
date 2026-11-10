@@ -3,13 +3,13 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: openviktor
+      POSTGRES_USER: laneassistant
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: openviktor
+      POSTGRES_DB: laneassistant
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U openviktor"]
+      test: ["CMD-SHELL", "pg_isready -U laneassistant"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,23 +38,22 @@ services:
   bot:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: apps/bot/Dockerfile
+      target: runner
     restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - ../.env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://openviktor:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/openviktor
+      DATABASE_URL: postgresql://laneassistant:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/laneassistant
       REDIS_URL: redis://redis:6379
       DEPLOYMENT_MODE: selfhosted
-      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
-      SLACK_APP_TOKEN: ${SLACK_APP_TOKEN}
-      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
-      ENABLE_DASHBOARD: ${ENABLE_DASHBOARD:-true}
       NODE_ENV: production
       LOG_LEVEL: ${LOG_LEVEL:-info}
     volumes:

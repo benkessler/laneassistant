@@ -1,4 +1,4 @@
-# Self-Hosting OpenViktor
+# Self-Hosting Lane Assistant
 
 ## Quick Start (5 minutes)
 
@@ -28,8 +28,8 @@
 ### 3. Run Setup
 
 ```bash
-git clone https://github.com/zggf-zggf/openviktor.git
-cd openviktor
+git clone https://github.com/benkessler/laneassistant.git
+cd laneassistant
 
 # Interactive setup wizard
 bun run setup
@@ -41,8 +41,8 @@ docker compose -f docker/docker-compose.selfhosted.yml up -d
 ### 4. Verify
 
 1. Go to your Slack workspace
-2. Invite the bot: `/invite @OpenViktor`
-3. Mention: `@OpenViktor hello!`
+2. Invite the bot: `/invite @Lane Assistant`
+3. Mention: `@Lane Assistant hello!`
 4. The bot should reply within seconds
 
 ---
@@ -52,7 +52,7 @@ docker compose -f docker/docker-compose.selfhosted.yml up -d
 ### Create a Slack App Manually
 
 1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App** > **From scratch**
-2. Name it "OpenViktor" and select your workspace
+2. Name it "Lane Assistant" and select your workspace
 
 #### Enable Socket Mode
 
@@ -103,7 +103,7 @@ Go to **Event Subscriptions** and enable:
 ### Environment Configuration
 
 ```bash
-cp docker/.env.example .env
+cp .env.example .env
 ```
 
 Required variables:
@@ -120,7 +120,7 @@ SLACK_SIGNING_SECRET=...
 # LLM — pick one provider
 ANTHROPIC_API_KEY=sk-ant-...    # For Claude models (default)
 
-# Dashboard
+# Dashboard (at least 12 characters)
 DASHBOARD_PASSWORD=your-secure-password
 ```
 
@@ -136,7 +136,7 @@ ENABLE_DASHBOARD=true           # Set to false to disable dashboard
 
 ### Using Ollama (local LLM)
 
-Run OpenViktor entirely offline with [Ollama](https://ollama.com), [vLLM](https://docs.vllm.ai), [LM Studio](https://lmstudio.ai), or any OpenAI-compatible server:
+Run Lane Assistant entirely offline with [Ollama](https://ollama.com), [vLLM](https://docs.vllm.ai), [LM Studio](https://lmstudio.ai), or any OpenAI-compatible server:
 
 ```bash
 # 1. Install and start Ollama
@@ -148,7 +148,7 @@ DEFAULT_MODEL=ollama/llama3.2
 # OLLAMA_BASE_URL=http://localhost:11434  # default, change for remote servers
 ```
 
-The `ollama/` prefix tells OpenViktor to route through the OpenAI-compatible endpoint. No `ANTHROPIC_API_KEY` is needed.
+The `ollama/` prefix tells Lane Assistant to route through the OpenAI-compatible endpoint. No `ANTHROPIC_API_KEY` is needed.
 
 Models with tool-calling support (recommended): `llama3.2` (3B+), `qwen2.5`, `mistral`, `command-r`.
 
@@ -192,7 +192,7 @@ The dashboard is available at `http://your-server:3001`.
 ## Updating
 
 ```bash
-cd openviktor
+cd laneassistant
 git pull
 docker compose -f docker/docker-compose.selfhosted.yml up -d --build
 ```
@@ -208,7 +208,7 @@ Database migrations run automatically on startup.
 ```bash
 # Backup PostgreSQL
 docker compose -f docker/docker-compose.selfhosted.yml exec postgres \
-  pg_dump -U openviktor openviktor > backup_$(date +%Y%m%d).sql
+  pg_dump -U laneassistant laneassistant > backup_$(date +%Y%m%d).sql
 
 # Backup .env
 cp .env .env.backup
@@ -223,7 +223,7 @@ docker compose -f docker/docker-compose.selfhosted.yml down
 # Restore database
 docker compose -f docker/docker-compose.selfhosted.yml up -d postgres
 docker compose -f docker/docker-compose.selfhosted.yml exec -T postgres \
-  psql -U openviktor openviktor < backup_YYYYMMDD.sql
+  psql -U laneassistant laneassistant < backup_YYYYMMDD.sql
 
 # Start all services
 docker compose -f docker/docker-compose.selfhosted.yml up -d

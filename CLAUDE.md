@@ -1,133 +1,72 @@
 # CLAUDE.md
 
-Project-specific instructions for Claude Code.
+Lane Assistant is Lane Growth's AI teammate: an autonomous agent that lives in Slack, runs client
+work through connected tools, follows up on its own schedule, and remembers what it learns. It runs
+first for Lane Growth itself, and later as one isolated Slack workspace per client.
 
 ## Project Structure
 
 TypeScript monorepo with Bun workspaces and Turborepo:
-- `apps/bot/` — Slack bot + agent runtime (main entry point)
-- `apps/web/` — Admin dashboard (Phase 7, React + Vite)
+- `apps/bot/` — Slack bot, agent runtime, scheduler, tool gateway, dashboard API (main entry point)
+- `apps/web/` — Admin dashboard (React + Vite), served by the bot from `apps/web/dist`
 - `packages/db/` — PostgreSQL schema with Prisma ORM
 - `packages/shared/` — Shared types, config (zod), logger (pino), errors
-- `packages/tools/` — Tool registry + executors
-- `packages/integrations/` — External service clients (GitHub, Linear, etc.)
+- `packages/tools/` — Tool registry, executors, per-workspace tool tokens
+- `packages/integrations/` — External service clients (Pipedream Connect)
+- `docs/research/` — Background research on Viktor, the product this design started from
 
 ## Common Commands
 
 ```bash
-# Install
 bun install
+bun run dev                                       # All dev servers
+bun run --filter @laneassistant/bot dev           # Bot only
+bun run --filter @laneassistant/web build         # Build the dashboard the bot serves
 
-# Development
-bun run dev                    # Start all dev servers
-bun run --filter @openviktor/bot dev  # Start bot only
+bun run db:generate                               # Regenerate Prisma client
+bun run db:migrate                                # Run migrations (dev)
 
-# Database
-bun run db:generate            # Regenerate Prisma client
-bun run db:migrate             # Run migrations (dev)
-bun run --filter @openviktor/db db:migrate:deploy  # Run migrations (prod)
-bun run --filter @openviktor/db db:studio          # Database GUI
+bun run lint                                      # Biome check
+bun run lint:fix
+bun run typecheck
+bun run test
 
-# Quality
-bun run lint                   # Biome check
-bun run lint:fix               # Biome auto-fix
-bun run typecheck              # TypeScript strict check
-bun run test                   # Run all tests
-bun run test:coverage          # Tests with coverage
-
-# Infrastructure
-docker compose -f docker/docker-compose.yml up -d     # Start PostgreSQL + Redis
-docker compose -f docker/docker-compose.yml down       # Stop infrastructure
+docker compose -f docker/docker-compose.yml up -d # PostgreSQL + Redis
 ```
 
-## Type Checking After Schema Changes
+## After Schema Changes
 
-After modifying `packages/db/prisma/schema.prisma`:
-
-1. Regenerate Prisma client: `bun run db:generate`
-2. Create migration: `cd packages/db && bunx prisma migrate dev --name describe-change`
-3. Run type check: `bun run typecheck`
+1. `bun run db:generate`
+2. `cd packages/db && bunx prisma migrate dev --name describe-change`
+3. `bun run typecheck`
 
 ## Code Style
 
-- Follow clean code principles: no unnecessary comments
-- Only write doc-strings for public APIs, exported functions, and non-obvious interfaces
-- Do not add inline comments explaining what the code does
-- TypeScript strict mode is enforced
-- Biome handles formatting and linting
+- Clean code, no comments that restate the code; doc-strings only for exported or non-obvious APIs
+- TypeScript strict mode; Biome handles formatting and linting
 
-## Database
+## Before Finishing a Change
 
-- PostgreSQL 16 with Prisma ORM
-- Schema: `packages/db/prisma/schema.prisma`
-- Migrations: `packages/db/prisma/migrations/`
-- Uses `prisma migrate deploy` in Docker (not `db push`)
+- `bun run test`, `bun run lint`, and `bun run typecheck` all pass
+- New behavior has tests (unit tests next to code or in `__tests__/`)
+- `README.md`, `docs/self-hosting.md`, and `.env.example` are updated when setup or config changes
 
-## Development Workflow (Linear Integration)
+## Invariants — do not break these
 
-We use Linear for issue tracking (OpenViktor project). Follow this workflow:
-
-### 1. Get or Create Linear Issue
-- Find existing issue or create a new one in the OpenViktor project
-- Move the issue to "In Progress"
-
-### 2. Explore the Codebase
-- Read relevant files until you understand the issue
-- Understand the current implementation
-
-### 3. Ask Clarifying Questions
-- Ask 5-10 questions about scope, expected behavior, edge cases
-
-### 4. Document Q&A in Linear
-- Add a comment with the full Q&A
-
-### 5. Create Specification
-- Plan the implementation: files to touch, schema changes, pitfalls
-- Post as a Linear comment with `#SPECIFICATION` header
-
-### 5.5. Checkpoint
-- Ask: "Ready to start implementation? Clear context first if needed"
-
-### 6. Implementation
-- Create branch (use Linear's suggested branch name)
-- Implement according to specification
-- Write tests alongside code — never leave tests for later
-
-### 7. Pre-Completion Checklist
-
-Before marking a Linear issue as done or creating a PR, you MUST complete ALL of these:
-
-- [ ] **Tests pass**: `bun run test` — all existing and new tests green
-- [ ] **Lint passes**: `bun run lint`
-- [ ] **Typecheck passes**: `bun run typecheck`
-- [ ] **Test coverage**: new code has meaningful test coverage (unit tests co-located, integration tests in `__tests__/`)
-- [ ] **Docs updated**: if the feature is user-facing or changes setup/config:
-  - Update `README.md` (phase table status, new sections if needed)
-  - Update `docs/self-hosting.md` if deployment steps changed
-  - Update `.env.example` if new environment variables were added
-- [ ] **Viktor cross-validation**: checked relevant `docs/viktor-reference/` docs
-- [ ] Create pull request and link to Linear issue
-
-## Viktor Reference Cross-Validation
-
-Every implementation change must be cross-validated against our reverse-engineering knowledge in `docs/viktor-reference/`. Before implementing any feature:
-
-1. Check relevant reference docs (e.g., `thread-orchestrator.md` for thread handling, `tool-gateway.md` for tool execution)
-2. Ensure behavior matches Viktor's known patterns — deviations must be intentional and documented
-3. Key reference files:
-   - `architecture.md` — Overall system design and subsystem interactions
-   - `conversational-style.md` — Tone, formatting, response patterns
-   - `thread-orchestrator.md` — Thread lifecycle, concurrency (16 thread limit)
-   - `tool-gateway.md` — Tool execution, timeouts (600s tool, 120s bash)
-   - `heartbeat.md` — Proactive check-in system (4x/day)
-   - `memory.md` — Knowledge persistence and retrieval
-   - `skill-routing.md` — How Viktor routes to capabilities
-   - `cost-control.md` — Token budgets and tier system
+- **Workspace isolation.** Each Slack workspace is one client. Tool-gateway calls carry a token
+  signed for exactly one workspace (`packages/tools/src/tool-token.ts`); never route by a shared
+  or global token. Data reads and writes are always scoped by `workspaceId`.
+- **Approval before external actions.** Anything that leaves Slack (email, CRM, calendar, posts to
+  external people) goes through the permission gate. Do not default `DANGEROUSLY_SKIP_PERMISSIONS` on.
+- **Thinking blocks are replayed unchanged** within a tool loop (`apps/bot/src/agent/providers/anthropic.ts`).
+  Current Claude models reject forced `tool_choice`, `budget_tokens`, and disabled thinking.
+- **No secrets in sandbox env.** Child processes get `buildSandboxEnv`, never `process.env`.
 
 ## Key Patterns
 
-- Slack connection via Socket Mode (no public URL needed)
-- LLM calls through provider abstraction (`apps/bot/src/agent/llm.ts`)
-- All agent work tracked as `AgentRun` rows in PostgreSQL
-- Structured logging with pino (JSON in production, pretty in dev)
-- Environment config validated with zod at startup
+- Slack via Socket Mode in self-hosted mode (no public URL needed); Events API + OAuth in managed mode
+- LLM calls go through the provider abstraction (`apps/bot/src/agent/gateway.ts`, `providers/`)
+- Model per run: trigger model (cron cost tier) → dashboard Settings choice → `DEFAULT_MODEL`
+- All agent work is tracked as `AgentRun` rows in PostgreSQL
+- Built-in skills live in `apps/bot/src/skills/definitions/*.md` and are seeded per workspace
+- Structured logging with pino; environment config validated with zod at startup

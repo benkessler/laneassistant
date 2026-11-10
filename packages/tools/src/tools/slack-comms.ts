@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { LLMToolDefinition } from "@openviktor/shared";
-import { markdownToMrkdwn } from "@openviktor/shared";
+import type { LLMToolDefinition } from "@laneassistant/shared";
+import { markdownToMrkdwn } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 import { appendSlackLog } from "../slack-log.js";
 import { resolveSafePath } from "../workspace.js";
@@ -565,7 +565,7 @@ function logSentMessage(
 		channel: parsed.channelId,
 		ts,
 		threadTs: parsed.threadTs,
-		username: "OpenViktor",
+		username: "Lane Assistant",
 		text: parsed.text,
 		isBotMessage: true,
 	}).catch(() => {});

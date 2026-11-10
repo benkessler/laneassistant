@@ -33,7 +33,6 @@ model Workspace {
   integrationAccounts IntegrationAccount[]
   permissionRequests  PermissionRequest[]
   toolDefinitions     ToolDefinition[]
-  spaces              Space[]
   subscription        Subscription?
   usageRecords        UsageRecord[]
 
@@ -290,95 +289,6 @@ enum CronJobType {
   CHANNEL_INTRO
   CUSTOM
   SCRIPT
-}
-
-// ─── Spaces ─────────────────────────────────────────────
-
-model Space {
-  id             String      @id @default(cuid())
-  workspaceId    String      @map("workspace_id")
-  name           String
-  description    String?
-  status         SpaceStatus @default(INITIALIZING)
-  sandboxPath    String      @map("sandbox_path")
-  domain         String?     @unique
-  previewUrl     String?     @map("preview_url")
-  productionUrl  String?     @map("production_url")
-  convexUrlDev      String?     @map("convex_url_dev")
-  convexUrlProd     String?     @map("convex_url_prod")
-  convexProjectId   String?     @map("convex_project_id")
-  convexDevDeployKey  String?   @map("convex_dev_deploy_key")
-  convexProdDeployKey String?   @map("convex_prod_deploy_key")
-  vercelProjectId   String?     @map("vercel_project_id")
-  projectSecret     String      @map("project_secret")
-  lastDeployedAt DateTime?   @map("last_deployed_at")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
-
-  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  deployments SpaceDeployment[]
-  variables   SpaceVariable[]
-
-  @@unique([workspaceId, name])
-  @@index([workspaceId, status])
-  @@map("spaces")
-}
-
-enum SpaceStatus {
-  INITIALIZING
-  READY
-  DEPLOYING
-  ACTIVE
-  FAILED
-  DELETED
-}
-
-model SpaceDeployment {
-  id               String            @id @default(cuid())
-  spaceId          String            @map("space_id")
-  environment      SpaceEnvironment
-  version          Int               @default(1)
-  status           SpaceDeployStatus @default(PENDING)
-  url              String?
-  vercelUrl        String?           @map("vercel_url")
-  convexDeployment String?           @map("convex_deployment")
-  commitMessage    String?           @map("commit_message")
-  buildLog         String?           @map("build_log")
-  durationMs       Int?              @map("duration_ms")
-  createdAt        DateTime          @default(now()) @map("created_at")
-
-  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-
-  @@index([spaceId, createdAt])
-  @@map("space_deployments")
-}
-
-enum SpaceEnvironment {
-  PREVIEW
-  PRODUCTION
-}
-
-enum SpaceDeployStatus {
-  PENDING
-  BUILDING
-  DEPLOYING
-  SUCCESS
-  FAILED
-}
-
-model SpaceVariable {
-  id        String   @id @default(cuid())
-  spaceId   String   @map("space_id")
-  key       String
-  value     String
-  isSecret  Boolean  @default(false) @map("is_secret")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
-
-  @@unique([spaceId, key])
-  @@map("space_variables")
 }
 
 // ─── Integrations ──────────────────────────────────────

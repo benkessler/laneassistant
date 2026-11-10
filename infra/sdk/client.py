@@ -1,4 +1,4 @@
-"""HTTP client for the OpenViktor Tool Gateway.
+"""HTTP client for the Lane Assistant Tool Gateway.
 
 Scripts running in the sandbox can import this module to call any registered
 tool through the gateway. No external dependencies required — uses stdlib only.

@@ -1,5 +1,5 @@
 {
-	"name": "@openviktor/integrations",
+	"name": "@laneassistant/integrations",
 	"version": "0.0.1",
 	"private": true,
 	"type": "module",
@@ -12,7 +12,7 @@
 		"clean": "rm -rf dist"
 	},
 	"dependencies": {
-		"@openviktor/shared": "workspace:*"
+		"@laneassistant/shared": "workspace:*"
 	},
 	"devDependencies": {
 		"vitest": "^3.0.0",

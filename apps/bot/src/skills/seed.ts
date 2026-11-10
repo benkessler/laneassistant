@@ -7,8 +7,8 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { PrismaClient } from "@openviktor/db";
-import type { Logger } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { Logger } from "@laneassistant/shared";
 
 interface SkillDefinition {
 	name: string;

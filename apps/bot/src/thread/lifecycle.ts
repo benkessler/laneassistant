@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@openviktor/db";
-import { ThreadPhase, type ThreadPhaseValue } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import { ThreadPhase, type ThreadPhaseValue } from "@laneassistant/shared";
 
 const VALID_TRANSITIONS: ReadonlyMap<ThreadPhaseValue, readonly ThreadPhaseValue[]> = new Map([
 	[ThreadPhase.IDLE, [ThreadPhase.TRIGGER]],

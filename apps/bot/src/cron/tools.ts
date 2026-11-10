@@ -1,6 +1,6 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { LLMToolDefinition, ToolResult } from "@openviktor/shared";
-import type { ToolExecutionContext, ToolExecutor } from "@openviktor/tools";
+import type { PrismaClient } from "@laneassistant/db";
+import type { LLMToolDefinition, ToolResult } from "@laneassistant/shared";
+import type { ToolExecutionContext, ToolExecutor } from "@laneassistant/tools";
 import { checkFrequencyWarning } from "./cost-control.js";
 import { calculateNextRun, estimateRunsPerDay, isValidCronExpression } from "./cron-parser.js";
 import type { CronScheduler } from "./scheduler.js";
@@ -26,7 +26,7 @@ export const createCronJobDefinition: LLMToolDefinition = {
 			model: {
 				type: "string",
 				description:
-					"Override the tier-based model selection with a specific model ID (e.g. 'claude-opus-4-20250514'). When set, cost_tier is ignored for model selection.",
+					"Override the tier-based model selection with a specific model ID (e.g. 'claude-opus-5-5'). When set, cost_tier is ignored for model selection.",
 			},
 			condition_script: {
 				type: "string",

@@ -49,7 +49,7 @@ describe("deployment mode config", () => {
 				...baseEnv,
 				SLACK_BOT_TOKEN: "xoxb-test",
 				SLACK_APP_TOKEN: "xapp-test",
-				DASHBOARD_PASSWORD: "pass",
+				DASHBOARD_PASSWORD: "a-long-enough-pass",
 			});
 			expect(config.DEPLOYMENT_MODE).toBe("selfhosted");
 		});
@@ -64,6 +64,15 @@ describe("deployment mode config", () => {
 			const env = { ...selfHostedEnv };
 			(env as Record<string, unknown>).SLACK_APP_TOKEN = undefined;
 			expect(() => loadConfig(env)).toThrow("SLACK_APP_TOKEN");
+		});
+
+		it("rejects a short or example DASHBOARD_PASSWORD", () => {
+			expect(() => loadConfig({ ...selfHostedEnv, DASHBOARD_PASSWORD: "short" })).toThrow(
+				"at least 12 characters",
+			);
+			expect(() => loadConfig({ ...selfHostedEnv, DASHBOARD_PASSWORD: "changeme" })).toThrow(
+				"DASHBOARD_PASSWORD",
+			);
 		});
 
 		it("requires DASHBOARD_PASSWORD when auth mode is basic", () => {
@@ -143,7 +152,7 @@ describe("deployment mode config", () => {
 			const config = loadConfig({
 				...managedEnv,
 				DASHBOARD_AUTH_MODE: "basic",
-				DASHBOARD_PASSWORD: "test",
+				DASHBOARD_PASSWORD: "a-long-enough-pass",
 			});
 			expect(getDashboardAuthMode(config)).toBe("basic");
 		});

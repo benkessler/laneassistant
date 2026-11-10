@@ -1,4 +1,4 @@
-import type { LLMResponse } from "@openviktor/shared";
+import type { LLMResponse } from "@laneassistant/shared";
 import { describe, expect, it, vi } from "vitest";
 import {
 	CONTEXT_WINDOW_SIZE,

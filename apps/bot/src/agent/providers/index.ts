@@ -1,5 +1,5 @@
-import type { EnvConfig, LLMProvider } from "@openviktor/shared";
-import { LLMError } from "@openviktor/shared";
+import type { EnvConfig, LLMProvider } from "@laneassistant/shared";
+import { LLMError } from "@laneassistant/shared";
 import { AnthropicProvider } from "./anthropic.js";
 import { GoogleProvider } from "./google.js";
 import { OpenAIProvider } from "./openai.js";
@@ -20,7 +20,7 @@ export function createProvider(name: ProviderName, config: EnvConfig): LLMProvid
 			if (!config.ANTHROPIC_API_KEY) {
 				throw new LLMError("ANTHROPIC_API_KEY is required to use Claude models");
 			}
-			return new AnthropicProvider(config.ANTHROPIC_API_KEY);
+			return new AnthropicProvider(config.ANTHROPIC_API_KEY, { effort: config.LLM_EFFORT });
 		case "openai":
 			return new OpenAIProvider({ apiKey: config.OPENAI_API_KEY });
 		case "google":

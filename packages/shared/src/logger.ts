@@ -85,6 +85,6 @@ export function createLogger(name: string, level = "info") {
 	return log;
 }
 
-export const logger = createLogger("openviktor", process.env.LOG_LEVEL ?? "info");
+export const logger = createLogger("laneassistant", process.env.LOG_LEVEL ?? "info");
 
 export type Logger = pino.Logger;

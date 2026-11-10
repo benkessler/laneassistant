@@ -101,8 +101,8 @@ describe("getModelForTier", () => {
 		expect(getModelForTier(2, "default")).toContain("sonnet");
 	});
 
-	it("returns sonnet for tier 3", () => {
-		expect(getModelForTier(3, "default")).toContain("sonnet");
+	it("returns opus for tier 3", () => {
+		expect(getModelForTier(3, "default")).toContain("opus");
 	});
 
 	it("returns default for unknown tier", () => {

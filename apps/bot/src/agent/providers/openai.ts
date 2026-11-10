@@ -6,8 +6,8 @@ import type {
 	LLMToolDefinition,
 	StopReason,
 	ToolResultBlock,
-} from "@openviktor/shared";
-import { LLMError } from "@openviktor/shared";
+} from "@laneassistant/shared";
+import { LLMError } from "@laneassistant/shared";
 import { calculateCostCents } from "../pricing.js";
 import { withRetry } from "../retry.js";
 

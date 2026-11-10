@@ -1,7 +1,7 @@
-import type { PrismaClient } from "@openviktor/db";
-import { type Logger, type TriggerType, decrypt } from "@openviktor/shared";
-import type { ToolBackend } from "@openviktor/tools";
-import { ensureWorkspace } from "@openviktor/tools";
+import type { PrismaClient } from "@laneassistant/db";
+import { type Logger, type TriggerType, decrypt } from "@laneassistant/shared";
+import type { ToolBackend } from "@laneassistant/tools";
+import { ensureWorkspace } from "@laneassistant/tools";
 import type { PromptContext } from "../agent/prompt.js";
 import type { AgentRunner, RunTrigger } from "../agent/runner.js";
 import { fetchActiveThreads } from "../thread/index.js";

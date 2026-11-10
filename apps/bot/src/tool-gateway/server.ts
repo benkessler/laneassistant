@@ -1,6 +1,6 @@
-import type { Logger } from "@openviktor/shared";
-import type { ToolBackend, ToolExecutionContext, ToolRegistry } from "@openviktor/tools";
-import { ensureWorkspace } from "@openviktor/tools";
+import type { Logger } from "@laneassistant/shared";
+import type { ToolBackend, ToolExecutionContext, ToolRegistry } from "@laneassistant/tools";
+import { ensureWorkspace, verifyWorkspaceToolToken } from "@laneassistant/tools";
 
 interface GatewayRequest {
 	role: string;
@@ -14,23 +14,12 @@ interface GatewayDeps {
 	defaultTimeoutMs: number;
 }
 
-const TOKEN_WORKSPACE_MAP = new Map<string, string>();
-
-export function registerWorkspaceToken(token: string, workspaceId: string): void {
-	TOKEN_WORKSPACE_MAP.set(token, workspaceId);
-}
-
-export function resolveWorkspaceFromToken(token: string): string | null {
-	return TOKEN_WORKSPACE_MAP.get(token) ?? null;
-}
-
 function validateAuth(req: Request): string | Response {
 	const authHeader = req.headers.get("authorization");
 	if (!authHeader?.startsWith("Bearer ")) {
 		return Response.json({ error: "Unauthorized" }, { status: 401 });
 	}
-	const token = authHeader.slice(7);
-	const workspaceId = resolveWorkspaceFromToken(token);
+	const workspaceId = verifyWorkspaceToolToken(authHeader.slice(7));
 	if (!workspaceId) {
 		return Response.json({ error: "Invalid token" }, { status: 403 });
 	}

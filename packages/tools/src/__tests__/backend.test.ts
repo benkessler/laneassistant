@@ -1,5 +1,5 @@
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
-import type { ToolResult } from "@openviktor/shared";
+import type { ToolResult } from "@laneassistant/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { LocalToolBackend, ModalToolBackend } from "../backend.js";
 import type { ToolExecutionContext } from "../registry.js";

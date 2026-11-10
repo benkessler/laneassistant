@@ -1,9 +1,8 @@
-import { ThreadLockedError } from "@openviktor/shared";
+import { ThreadLockedError } from "@laneassistant/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockResolveWorkspace = vi.fn();
 const mockResolveMember = vi.fn();
-const mockRegisterWorkspaceToken = vi.fn();
 
 const mockResolveUserMentions = vi.fn(async (text: string) => text);
 
@@ -11,10 +10,6 @@ vi.mock("../resolve.js", () => ({
 	resolveWorkspace: (...args: unknown[]) => mockResolveWorkspace(...args),
 	resolveMember: (...args: unknown[]) => mockResolveMember(...args),
 	resolveUserMentions: (text: string) => mockResolveUserMentions(text),
-}));
-
-vi.mock("../../tool-gateway/server.js", () => ({
-	registerWorkspaceToken: (...args: unknown[]) => mockRegisterWorkspaceToken(...args),
 }));
 
 vi.mock("../../thread/index.js", () => ({

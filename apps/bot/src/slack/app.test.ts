@@ -8,7 +8,7 @@ vi.mock("@slack/bolt", () => {
 	return { App, LogLevel };
 });
 
-vi.mock("@openviktor/shared", () => ({
+vi.mock("@laneassistant/shared", () => ({
 	createLogger: vi.fn().mockReturnValue({
 		info: vi.fn(),
 		debug: vi.fn(),
@@ -40,7 +40,7 @@ describe("createSlackApp", () => {
 
 	it("passes a logger adapter that delegates to pino", async () => {
 		const { App } = await import("@slack/bolt");
-		const { createLogger } = await import("@openviktor/shared");
+		const { createLogger } = await import("@laneassistant/shared");
 		const { createSlackApp } = await import("./app.js");
 
 		const pinoLogger = (createLogger as ReturnType<typeof vi.fn>).mock.results[0]?.value ?? {

@@ -1,5 +1,5 @@
-import { LLMError } from "@openviktor/shared";
-import type { LLMMessage } from "@openviktor/shared";
+import { LLMError } from "@laneassistant/shared";
+import type { LLMMessage } from "@laneassistant/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AnthropicProvider } from "../providers/anthropic.js";
 
@@ -120,7 +120,7 @@ describe("AnthropicProvider", () => {
 		expect(params.max_tokens).toBe(1024);
 	});
 
-	it("defaults maxTokens to 4096", async () => {
+	it("defaults maxTokens to 16000", async () => {
 		mockCreate.mockResolvedValue(makeResponse());
 
 		await provider.chat({
@@ -129,7 +129,7 @@ describe("AnthropicProvider", () => {
 		});
 
 		const [params] = mockCreate.mock.calls[0];
-		expect(params.max_tokens).toBe(4096);
+		expect(params.max_tokens).toBe(16_000);
 	});
 
 	it("passes tools and toolChoice to the API", async () => {
@@ -278,5 +278,96 @@ describe("AnthropicProvider", () => {
 		expect(params.messages[0].content).toEqual([
 			{ type: "text", text: "Hello from content blocks" },
 		]);
+	});
+
+	describe("current-generation models", () => {
+		it("sends adaptive thinking with drop_block binding, effort, and refusal fallback", async () => {
+			const effortProvider = new AnthropicProvider("sk-ant-test-key", { effort: "high" });
+			mockCreate.mockResolvedValue(makeResponse({ model: "claude-opus-5-5" }));
+
+			await effortProvider.chat({
+				model: "claude-opus-5-5",
+				messages: [{ role: "user", content: "Hi" }],
+			});
+
+			const [params, options] = mockCreate.mock.calls[0];
+			expect(params.thinking).toEqual({
+				type: "adaptive",
+				block_binding: { prefix_mismatch_behavior: "drop_block" },
+			});
+			expect(params.output_config).toEqual({ effort: "high" });
+			expect(params.fallbacks).toBe("default");
+			expect(options.headers["anthropic-beta"]).toBe(
+				"thinking-binding-controls-2026-08-01,server-side-fallback-2026-07-01",
+			);
+		});
+
+		it("does not send thinking, effort, or betas to older models", async () => {
+			mockCreate.mockResolvedValue(makeResponse());
+
+			await provider.chat({
+				model: "claude-sonnet-4-20250514",
+				messages: [{ role: "user", content: "Hi" }],
+			});
+
+			const [params, options] = mockCreate.mock.calls[0];
+			expect(params.thinking).toBeUndefined();
+			expect(params.output_config).toBeUndefined();
+			expect(params.fallbacks).toBeUndefined();
+			expect(options.headers).toBeUndefined();
+		});
+
+		it("drops forced tool choice, which current models reject", async () => {
+			mockCreate.mockResolvedValue(makeResponse({ model: "claude-opus-5-5" }));
+
+			await provider.chat({
+				model: "claude-opus-5-5",
+				messages: [{ role: "user", content: "Hi" }],
+				tools: [{ name: "t", description: "d", input_schema: { type: "object" } }],
+				toolChoice: "any",
+			});
+
+			const [params] = mockCreate.mock.calls[0];
+			expect(params.tools).toHaveLength(1);
+			expect(params.tool_choice).toBeUndefined();
+		});
+
+		it("keeps thinking blocks verbatim and drops unknown block types", async () => {
+			mockCreate.mockResolvedValue(
+				makeResponse({
+					model: "claude-opus-5-5",
+					content: [
+						{ type: "thinking", thinking: "", signature: "sig_1" },
+						{ type: "redacted_thinking", data: "opaque" },
+						{ type: "fallback", from: { model: "a" }, to: { model: "b" } },
+						{ type: "text", text: "Done" },
+					],
+				}),
+			);
+
+			const result = await provider.chat({
+				model: "claude-opus-5-5",
+				messages: [{ role: "user", content: "Hi" }],
+			});
+
+			expect(result.content).toEqual([
+				{ type: "thinking", thinking: "", signature: "sig_1" },
+				{ type: "redacted_thinking", data: "opaque" },
+				{ type: "text", text: "Done" },
+			]);
+		});
+
+		it("does not send server fallbacks for Haiku 5.5", async () => {
+			mockCreate.mockResolvedValue(makeResponse({ model: "claude-haiku-5-5" }));
+
+			await provider.chat({
+				model: "claude-haiku-5-5",
+				messages: [{ role: "user", content: "Hi" }],
+			});
+
+			const [params] = mockCreate.mock.calls[0];
+			expect(params.thinking).toBeDefined();
+			expect(params.fallbacks).toBeUndefined();
+		});
 	});
 });

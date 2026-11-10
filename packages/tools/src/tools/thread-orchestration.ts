@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { LLMToolDefinition } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { LLMToolDefinition } from "@laneassistant/shared";
 import type { ToolExecutionContext, ToolExecutor } from "../registry.js";
 
 export interface SpawnAgentRunParams {

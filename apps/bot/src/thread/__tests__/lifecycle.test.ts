@@ -1,4 +1,4 @@
-import { ThreadPhase } from "@openviktor/shared";
+import { ThreadPhase } from "@laneassistant/shared";
 import { describe, expect, it, vi } from "vitest";
 import { isValidTransition, phaseName, transitionPhase } from "../lifecycle.js";
 

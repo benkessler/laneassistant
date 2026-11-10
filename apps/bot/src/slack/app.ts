@@ -1,5 +1,5 @@
-import { createLogger } from "@openviktor/shared";
-import type { EnvConfig, Logger } from "@openviktor/shared";
+import { createLogger } from "@laneassistant/shared";
+import type { EnvConfig, Logger } from "@laneassistant/shared";
 import { App, LogLevel } from "@slack/bolt";
 import type { Logger as SlackLogger } from "@slack/bolt";
 

@@ -1,5 +1,5 @@
 """
-OpenViktor Modal.com tool execution backend.
+Lane Assistant Modal.com tool execution backend.
 
 Deploys a web endpoint that receives tool execution requests and runs them
 inside a Debian container with a persistent workspace volume.
@@ -33,9 +33,9 @@ from typing import Optional
 import modal
 from pydantic import BaseModel
 
-app = modal.App("openviktor-tools")
+app = modal.App("laneassistant-tools")
 
-volume = modal.Volume.from_name("openviktor-workspaces", create_if_missing=True)
+volume = modal.Volume.from_name("laneassistant-workspaces", create_if_missing=True)
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
@@ -1344,7 +1344,7 @@ class ToolRequest(BaseModel):
     image=image,
     volumes={"/data/workspaces": volume},
     timeout=660,
-    secrets=[modal.Secret.from_name("openviktor-tools")],
+    secrets=[modal.Secret.from_name("laneassistant-tools")],
 )
 @modal.fastapi_endpoint(method="POST")
 def execute(request: ToolRequest) -> dict:

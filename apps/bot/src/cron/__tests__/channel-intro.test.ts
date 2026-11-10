@@ -38,7 +38,7 @@ describe("buildChannelIntroPrompt", () => {
 		expect(prompt).toContain("Support channels");
 	});
 
-	it("includes template rules from Viktor reference", () => {
+	it("includes channel intro template rules", () => {
 		const prompt = buildChannelIntroPrompt(0);
 		expect(prompt).toContain("Lead with connected integrations");
 		expect(prompt).toContain("4-5 concrete capabilities");

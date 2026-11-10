@@ -1,10 +1,10 @@
-import type { PrismaClient } from "@openviktor/db";
+import type { PrismaClient } from "@laneassistant/db";
 import type {
 	PipedreamAction,
 	PipedreamClient,
 	PipedreamConfigurableProp,
-} from "@openviktor/integrations";
-import type { LLMToolDefinition } from "@openviktor/shared";
+} from "@laneassistant/integrations";
+import type { LLMToolDefinition } from "@laneassistant/shared";
 import type { ToolExecutor } from "../../registry.js";
 import type { ToolRegistry } from "../../registry.js";
 import { actionKeyToToolName, convertConfigurableProps } from "./schema-converter.js";

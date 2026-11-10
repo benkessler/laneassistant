@@ -1,6 +1,6 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { PipedreamClient } from "@openviktor/integrations";
-import type { LLMToolDefinition } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { PipedreamClient } from "@laneassistant/integrations";
+import type { LLMToolDefinition } from "@laneassistant/shared";
 import type { ToolExecutor } from "../../registry.js";
 
 export const listAvailableIntegrationsDefinition: LLMToolDefinition = {

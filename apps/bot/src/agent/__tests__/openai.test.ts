@@ -1,5 +1,5 @@
-import type { LLMMessage } from "@openviktor/shared";
-import { LLMError } from "@openviktor/shared";
+import type { LLMMessage } from "@laneassistant/shared";
+import { LLMError } from "@laneassistant/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { OpenAIProvider } from "../providers/openai.js";
 

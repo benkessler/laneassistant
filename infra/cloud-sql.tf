@@ -1,6 +1,6 @@
 # Cloud SQL PostgreSQL instance
 resource "google_sql_database_instance" "postgres" {
-  name                = "openviktor-db"
+  name                = "laneassistant-db"
   database_version    = "POSTGRES_16"
   region              = var.region
   deletion_protection = true
@@ -31,13 +31,13 @@ resource "google_sql_database_instance" "postgres" {
   depends_on = [google_service_networking_connection.private_vpc]
 }
 
-resource "google_sql_database" "openviktor" {
-  name     = "openviktor"
+resource "google_sql_database" "laneassistant" {
+  name     = "laneassistant"
   instance = google_sql_database_instance.postgres.name
 }
 
-resource "google_sql_user" "openviktor" {
-  name     = "openviktor"
+resource "google_sql_user" "laneassistant" {
+  name     = "laneassistant"
   instance = google_sql_database_instance.postgres.name
   password = var.db_password
 }

@@ -46,7 +46,7 @@ describe("Auth Middleware", () => {
 			expect(json.success).toBe(true);
 
 			const cookie = res.headers.get("set-cookie");
-			expect(cookie).toContain("ov_session=");
+			expect(cookie).toContain("la_session=");
 			expect(cookie).toContain("HttpOnly");
 		});
 
@@ -104,6 +104,22 @@ describe("Auth Middleware", () => {
 			expect(ctx?.mode).toBe("basic");
 		});
 
+		it("accepts Basic Auth passwords that contain a colon", async () => {
+			const auth = createAuthMiddleware({
+				config: { ...(baseConfig as object), DASHBOARD_PASSWORD: "pass:with:colons" } as never,
+				prisma: mockPrisma,
+				logger: mockLogger,
+			});
+
+			const credentials = Buffer.from("admin:pass:with:colons").toString("base64");
+			const req = new Request("http://localhost/api/workspace", {
+				headers: { authorization: `Basic ${credentials}` },
+			});
+
+			const ctx = await auth.authenticate(req);
+			expect(ctx?.username).toBe("admin");
+		});
+
 		it("returns null for invalid Basic Auth", async () => {
 			const auth = createAuthMiddleware({
 				config: baseConfig,
@@ -135,10 +151,10 @@ describe("Auth Middleware", () => {
 			});
 			const loginRes = await auth.handleLogin(loginReq);
 			const cookie = loginRes.headers.get("set-cookie") ?? "";
-			const tokenMatch = cookie.match(/ov_session=([^\s;]+)/);
+			const tokenMatch = cookie.match(/la_session=([^\s;]+)/);
 
 			const req = new Request("http://localhost/api/workspace", {
-				headers: { cookie: `ov_session=${tokenMatch?.[1]}` },
+				headers: { cookie: `la_session=${tokenMatch?.[1]}` },
 			});
 
 			const ctx = await auth.authenticate(req);

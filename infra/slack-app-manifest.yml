@@ -1,9 +1,9 @@
 display_information:
-  name: OpenViktor
+  name: Lane Assistant
   description: AI assistant for your Slack workspace
   background_color: "#1a1a2e"
   long_description: |
-    OpenViktor is an AI-powered assistant that lives in your Slack workspace.
+    Lane Assistant is an AI-powered assistant that lives in your Slack workspace.
     It can run tasks, answer questions, manage integrations, and automate
     workflows — all from Slack. Powered by Gemini.
 
@@ -13,12 +13,12 @@ features:
     messages_tab_enabled: true
     messages_tab_read_only_enabled: false
   bot_user:
-    display_name: Viktor
+    display_name: Lane Assistant
     always_online: true
 
 oauth_config:
   redirect_urls:
-    - https://api.openviktor.com/slack/oauth/callback
+    - https://api.your-domain.com/slack/oauth/callback
   scopes:
     bot:
       - app_mentions:read
@@ -42,7 +42,7 @@ oauth_config:
 
 settings:
   event_subscriptions:
-    request_url: https://api.openviktor.com/slack/events
+    request_url: https://api.your-domain.com/slack/events
 
     bot_events:
       - app_mention
@@ -52,7 +52,7 @@ settings:
       - message.mpim
   interactivity:
     is_enabled: true
-    request_url: https://api.openviktor.com/slack/interactions
+    request_url: https://api.your-domain.com/slack/interactions
   org_deploy_enabled: false
   socket_mode_enabled: false
   token_rotation_enabled: false

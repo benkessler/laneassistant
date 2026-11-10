@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { LLMToolDefinition } from "@openviktor/shared";
+import type { LLMToolDefinition } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 import { resolveSafePathStrict } from "../workspace.js";
 

@@ -1,6 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { extname } from "node:path";
-import type { LLMToolDefinition } from "@openviktor/shared";
+import type { LLMToolDefinition } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 import { resolveSafePathStrict } from "../workspace.js";
 

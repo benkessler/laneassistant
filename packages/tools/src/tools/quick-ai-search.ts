@@ -1,4 +1,4 @@
-import type { LLMProvider, LLMToolDefinition, ToolResult } from "@openviktor/shared";
+import type { LLMProvider, LLMToolDefinition, ToolResult } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 
 interface SearchResultItem {
@@ -27,7 +27,7 @@ export function createQuickAiSearchExecutor(opts: {
 	llmProvider?: LLMProvider;
 	model?: string;
 }): ToolExecutor {
-	const model = opts.model ?? "claude-3-5-sonnet-20241022";
+	const model = opts.model ?? "claude-sonnet-5-5";
 
 	return async (args, _ctx): Promise<ToolResult> => {
 		try {

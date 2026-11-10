@@ -1,4 +1,4 @@
-import type { LLMProvider, LLMToolDefinition, ToolResult } from "@openviktor/shared";
+import type { LLMProvider, LLMToolDefinition, ToolResult } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 
 type IntelligenceLevel = "fast" | "balanced" | "smart";
@@ -34,7 +34,7 @@ export const aiStructuredOutputDefinition: LLMToolDefinition = {
 
 export function createAiStructuredOutputExecutor(
 	llmProvider: LLMProvider,
-	model = "claude-3-5-sonnet-20241022",
+	model = "claude-sonnet-5-5",
 ): ToolExecutor {
 	return async (args, _ctx): Promise<ToolResult> => {
 		try {
@@ -46,7 +46,7 @@ export function createAiStructuredOutputExecutor(
 			}
 
 			const intelligenceLevel = parseIntelligenceLevel(args.intelligence_level);
-			const selectedModel = intelligenceLevel === "fast" ? "claude-haiku-3-5-20241022" : model;
+			const selectedModel = intelligenceLevel === "fast" ? "claude-haiku-5-5" : model;
 
 			const systemPrompt =
 				"You are a structured data extraction assistant. Extract data matching the provided JSON schema. Respond ONLY with valid JSON.";

@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@openviktor/db";
+import type { PrismaClient } from "@laneassistant/db";
 import { calculateNextRun } from "./cron-parser.js";
 
 const DEFAULT_HEARTBEAT_SCHEDULE = "1 8,11,14,17 * * 1-5";

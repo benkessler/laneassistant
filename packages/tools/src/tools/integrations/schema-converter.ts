@@ -1,4 +1,4 @@
-import type { PipedreamConfigurableProp } from "@openviktor/integrations";
+import type { PipedreamConfigurableProp } from "@laneassistant/integrations";
 
 interface JsonSchemaProperty {
 	type: string;

@@ -7,7 +7,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { LLMToolDefinition } from "@openviktor/shared";
+import type { LLMToolDefinition } from "@laneassistant/shared";
 import { getWorkspaceDir } from "../workspace.js";
 import { generateSdk } from "./generate.js";
 

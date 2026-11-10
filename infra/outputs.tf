@@ -15,7 +15,7 @@ output "cloud_sql_private_ip" {
 
 output "artifact_registry" {
   description = "Artifact Registry repository path"
-  value       = "${var.region}-docker.pkg.dev/${var.project_id}/openviktor"
+  value       = "${var.region}-docker.pkg.dev/${var.project_id}/laneassistant"
 }
 
 output "domain_mapping_records" {

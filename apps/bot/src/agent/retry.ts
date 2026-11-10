@@ -1,4 +1,4 @@
-import { LLMError } from "@openviktor/shared";
+import { LLMError } from "@laneassistant/shared";
 
 interface RetryOptions {
 	maxRetries?: number;

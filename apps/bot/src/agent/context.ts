@@ -1,4 +1,4 @@
-import type { LLMMessage } from "@openviktor/shared";
+import type { LLMMessage } from "@laneassistant/shared";
 import { type LLMGateway, extractText } from "./gateway.js";
 
 export const CONTEXT_WINDOW_SIZE = 20;

@@ -1,5 +1,5 @@
 /**
- * Python SDK generator for OpenViktor.
+ * Python SDK generator for Lane Assistant.
  *
  * Reads tool definitions from the registry and generates Python modules
  * that wrap each tool as an async function calling the tool gateway.
@@ -20,7 +20,7 @@
 import { readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import type { LLMToolDefinition } from "@openviktor/shared";
+import type { LLMToolDefinition } from "@laneassistant/shared";
 
 // ---------------------------------------------------------------------------
 // Tool → module grouping
@@ -241,7 +241,7 @@ function generateModule(moduleName: string, tools: LLMToolDefinition[]): string 
 
 function generateToolsInit(moduleNames: string[]): string {
 	const lines = [
-		'"""OpenViktor Tools SDK.',
+		'"""Lane Assistant Tools SDK.',
 		"",
 		"Auto-generated async Python functions for calling tools through the gateway.",
 		"",

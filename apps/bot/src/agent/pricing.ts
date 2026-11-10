@@ -5,7 +5,45 @@ interface ModelPricing {
 	cacheReadPerMTok: number;
 }
 
+// USD per million tokens. Cache writes are the 5-minute rate (1.25x input).
+// Claude Haiku 5.5 rates apply to prompts up to 100K tokens; longer prompts cost more.
 const PRICING: Record<string, ModelPricing> = {
+	"claude-fable-5-2": {
+		inputPerMTok: 8,
+		outputPerMTok: 40,
+		cacheWritePerMTok: 10,
+		cacheReadPerMTok: 0.2,
+	},
+	"claude-opus-5-5": {
+		inputPerMTok: 4,
+		outputPerMTok: 20,
+		cacheWritePerMTok: 5,
+		cacheReadPerMTok: 0.2,
+	},
+	"claude-opus-5": {
+		inputPerMTok: 5,
+		outputPerMTok: 25,
+		cacheWritePerMTok: 6.25,
+		cacheReadPerMTok: 0.5,
+	},
+	"claude-sonnet-5-5": {
+		inputPerMTok: 2,
+		outputPerMTok: 10,
+		cacheWritePerMTok: 2.5,
+		cacheReadPerMTok: 0.1,
+	},
+	"claude-sonnet-5": {
+		inputPerMTok: 2,
+		outputPerMTok: 10,
+		cacheWritePerMTok: 2.5,
+		cacheReadPerMTok: 0.2,
+	},
+	"claude-haiku-5-5": {
+		inputPerMTok: 0.1,
+		outputPerMTok: 0.5,
+		cacheWritePerMTok: 0.125,
+		cacheReadPerMTok: 0.01,
+	},
 	"claude-opus-4": {
 		inputPerMTok: 5,
 		outputPerMTok: 25,

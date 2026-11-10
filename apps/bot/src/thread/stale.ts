@@ -1,6 +1,6 @@
-import type { PrismaClient } from "@openviktor/db";
-import { ThreadPhase } from "@openviktor/shared";
-import type { Logger } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import { ThreadPhase } from "@laneassistant/shared";
+import type { Logger } from "@laneassistant/shared";
 
 export class StaleThreadDetector {
 	private interval: ReturnType<typeof setInterval> | null = null;

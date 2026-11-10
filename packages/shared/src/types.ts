@@ -48,7 +48,24 @@ export interface ToolResultBlock {
 	is_error?: boolean;
 }
 
-export type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock;
+/** Model reasoning. Must be sent back unchanged within a tool loop; never shown to users. */
+export interface ThinkingBlock {
+	type: "thinking";
+	thinking: string;
+	signature: string;
+}
+
+export interface RedactedThinkingBlock {
+	type: "redacted_thinking";
+	data: string;
+}
+
+export type ContentBlock =
+	| TextBlock
+	| ToolUseBlock
+	| ToolResultBlock
+	| ThinkingBlock
+	| RedactedThinkingBlock;
 
 export interface LLMToolDefinition {
 	name: string;
@@ -92,12 +109,6 @@ export interface LLMProvider {
 		timeoutMs?: number;
 	}): Promise<LLMResponse>;
 }
-
-export type SpaceStatus = "INITIALIZING" | "READY" | "DEPLOYING" | "ACTIVE" | "FAILED" | "DELETED";
-
-export type SpaceEnvironment = "PREVIEW" | "PRODUCTION";
-
-export type SpaceDeployStatus = "PENDING" | "BUILDING" | "DEPLOYING" | "SUCCESS" | "FAILED";
 
 export interface ToolDefinition {
 	name: string;

@@ -1,4 +1,4 @@
-import type { Logger } from "@openviktor/shared";
+import type { Logger } from "@laneassistant/shared";
 
 export interface ConcurrencyLimiter {
 	acquire(workspaceId: string, runId: string): Promise<boolean>;
@@ -82,7 +82,7 @@ export class RedisConcurrencyLimiter implements ConcurrencyLimiter {
 	}
 
 	private key(workspaceId: string): string {
-		return `openviktor:concurrency:${workspaceId}`;
+		return `laneassistant:concurrency:${workspaceId}`;
 	}
 
 	async acquire(workspaceId: string, runId: string): Promise<boolean> {

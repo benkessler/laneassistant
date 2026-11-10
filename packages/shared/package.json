@@ -1,5 +1,5 @@
 {
-	"name": "@openviktor/shared",
+	"name": "@laneassistant/shared",
 	"version": "0.0.1",
 	"private": true,
 	"type": "module",

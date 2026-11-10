@@ -1,7 +1,7 @@
 import { createHmac, randomBytes } from "node:crypto";
-import type { PrismaClient } from "@openviktor/db";
-import type { EnvConfig, Logger } from "@openviktor/shared";
-import { encrypt } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { EnvConfig, Logger } from "@laneassistant/shared";
+import { encrypt } from "@laneassistant/shared";
 import { WebClient } from "@slack/web-api";
 import type { ConnectionManager } from "./connection-manager.js";
 
@@ -221,7 +221,7 @@ export function createOAuthHandler(deps: OAuthHandlerConfig) {
 				status: 302,
 				headers: {
 					Location: `${webUrl}/runs`,
-					"Set-Cookie": `ov_session=${token}; HttpOnly; SameSite=Lax; Path=/; Domain=.${domain}; Max-Age=86400${secure}`,
+					"Set-Cookie": `la_session=${token}; HttpOnly; SameSite=Lax; Path=/; Domain=.${domain}; Max-Age=86400${secure}`,
 				},
 			});
 		} catch (err) {

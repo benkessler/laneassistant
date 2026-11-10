@@ -1,5 +1,5 @@
-import type { LLMToolDefinition, ToolResult } from "@openviktor/shared";
-import { ToolExecutionError, ToolTimeoutError } from "@openviktor/shared";
+import type { LLMToolDefinition, ToolResult } from "@laneassistant/shared";
+import { ToolExecutionError, ToolTimeoutError } from "@laneassistant/shared";
 
 export interface ToolExecutionContext {
 	workspaceId: string;

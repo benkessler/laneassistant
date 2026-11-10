@@ -2,8 +2,8 @@ import { spawn } from "node:child_process";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CronScheduler } from "../scheduler.js";
 
-vi.mock("@openviktor/tools", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("@openviktor/tools")>();
+vi.mock("@laneassistant/tools", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@laneassistant/tools")>();
 	return { ...actual, ensureWorkspace: async () => "/tmp" };
 });
 

@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { PrismaClient } from "@openviktor/db";
-import type { EnvConfig, Logger } from "@openviktor/shared";
-import { getDashboardAuthMode } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { EnvConfig, Logger } from "@laneassistant/shared";
+import { getDashboardAuthMode } from "@laneassistant/shared";
 
 export interface AuthContext {
 	username: string;
@@ -45,6 +45,20 @@ function verifyJwt(token: string, secret: string): Record<string, unknown> | nul
 	}
 }
 
+function safeEqual(a: string, b: string): boolean {
+	const bufA = Buffer.from(a, "utf8");
+	const bufB = Buffer.from(b, "utf8");
+	return bufA.length === bufB.length && timingSafeEqual(bufA, bufB);
+}
+
+function credentialsMatch(config: EnvConfig, username: string, password: string): boolean {
+	const expectedPassword = config.DASHBOARD_PASSWORD;
+	if (!expectedPassword) return false;
+	const userOk = safeEqual(username, config.DASHBOARD_USERNAME);
+	const passOk = safeEqual(password, expectedPassword);
+	return userOk && passOk;
+}
+
 function getJwtSecret(config: EnvConfig): string {
 	return config.ENCRYPTION_KEY ?? config.SLACK_SIGNING_SECRET;
 }
@@ -71,7 +85,7 @@ export function createAuthMiddleware(deps: AuthMiddlewareConfig) {
 			return Response.json({ error: "Username and password required" }, { status: 400 });
 		}
 
-		if (username !== config.DASHBOARD_USERNAME || password !== config.DASHBOARD_PASSWORD) {
+		if (!credentialsMatch(config, username, password)) {
 			logger.warn({ username }, "Failed login attempt");
 			return Response.json({ error: "Invalid credentials" }, { status: 401 });
 		}
@@ -81,7 +95,7 @@ export function createAuthMiddleware(deps: AuthMiddlewareConfig) {
 		const secure = config.NODE_ENV === "production" ? "; Secure" : "";
 		const headers = new Headers({
 			"Content-Type": "application/json",
-			"Set-Cookie": `ov_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400${secure}`,
+			"Set-Cookie": `la_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400${secure}`,
 		});
 
 		return new Response(JSON.stringify({ success: true, token }), { headers });
@@ -106,8 +120,10 @@ export function createAuthMiddleware(deps: AuthMiddlewareConfig) {
 		if (authMode === "basic") {
 			if (authHeader.startsWith("Basic ")) {
 				const decoded = Buffer.from(authHeader.slice(6), "base64").toString();
-				const [username, password] = decoded.split(":");
-				if (username === config.DASHBOARD_USERNAME && password === config.DASHBOARD_PASSWORD) {
+				const separator = decoded.indexOf(":");
+				const username = separator === -1 ? decoded : decoded.slice(0, separator);
+				const password = separator === -1 ? "" : decoded.slice(separator + 1);
+				if (credentialsMatch(config, username, password)) {
 					return { username, mode: "basic" };
 				}
 			}
@@ -115,7 +131,7 @@ export function createAuthMiddleware(deps: AuthMiddlewareConfig) {
 
 		// Try JWT cookie
 		const cookie = req.headers.get("cookie") ?? "";
-		const sessionMatch = cookie.match(/ov_session=([^\s;]+)/);
+		const sessionMatch = cookie.match(/la_session=([^\s;]+)/);
 		if (sessionMatch) {
 			const payload = verifyJwt(sessionMatch[1], jwtSecret);
 			if (payload) {

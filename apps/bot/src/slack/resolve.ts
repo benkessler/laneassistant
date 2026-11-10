@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@openviktor/db";
+import type { PrismaClient } from "@laneassistant/db";
 
 export interface SlackClient {
 	team: { info: () => Promise<{ team?: { name?: string } }> };

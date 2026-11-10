@@ -1,6 +1,7 @@
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ToolGatewayClient } from "../client.js";
+import { verifyWorkspaceToolToken } from "../tool-token.js";
 
 let server: Server;
 let port = 0;
@@ -27,8 +28,8 @@ beforeAll(
 					return;
 				}
 
-				const auth = req.headers.authorization;
-				if (auth !== "Bearer test-token") {
+				const auth = req.headers.authorization ?? "";
+				if (verifyWorkspaceToolToken(auth.replace(/^Bearer /, "")) !== "ws_test") {
 					res.writeHead(401, { "Content-Type": "application/json" });
 					res.end(JSON.stringify({ error: "Unauthorized" }));
 					return;
@@ -69,10 +70,9 @@ describe("ToolGatewayClient", () => {
 	it("calls tool and returns result", async () => {
 		const client = new ToolGatewayClient({
 			baseUrl: `http://localhost:${port}`,
-			token: "test-token",
 		});
 
-		const result = await client.call("echo", { message: "hello" });
+		const result = await client.call("echo", { message: "hello" }, "ws_test");
 		expect(result.output).toEqual({ echoed: "hello" });
 		expect(result.error).toBeUndefined();
 		expect(result.durationMs).toBeGreaterThanOrEqual(0);
@@ -81,31 +81,28 @@ describe("ToolGatewayClient", () => {
 	it("returns error from gateway", async () => {
 		const client = new ToolGatewayClient({
 			baseUrl: `http://localhost:${port}`,
-			token: "test-token",
 		});
 
-		const result = await client.call("fail", {});
+		const result = await client.call("fail", {}, "ws_test");
 		expect(result.error).toBe("Tool failed");
 	});
 
 	it("returns error on auth failure", async () => {
 		const client = new ToolGatewayClient({
 			baseUrl: `http://localhost:${port}`,
-			token: "wrong-token",
 		});
 
-		const result = await client.call("echo", { message: "hello" });
+		const result = await client.call("echo", { message: "hello" }, "ws_other");
 		expect(result.error).toContain("401");
 	});
 
 	it("returns error on connection failure", async () => {
 		const client = new ToolGatewayClient({
 			baseUrl: "http://localhost:1",
-			token: "test-token",
 			timeoutMs: 1_000,
 		});
 
-		const result = await client.call("echo", { message: "hello" });
+		const result = await client.call("echo", { message: "hello" }, "ws_test");
 		expect(result.error).toBeDefined();
 	});
 });

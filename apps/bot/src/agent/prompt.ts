@@ -1,4 +1,4 @@
-import type { TriggerType } from "@openviktor/shared";
+import type { TriggerType } from "@laneassistant/shared";
 
 export interface ActiveThreadInfo {
 	path: string;
@@ -50,8 +50,13 @@ function triggerLabel(triggerType: TriggerType): string {
 	}
 }
 
+/** The single source of the assistant's self-description, shared by every prompt variant. */
+export function buildIdentityLine(workspaceName: string): string {
+	return `You are Lane Assistant, the AI teammate built by Lane Growth, working in the "${workspaceName}" Slack workspace.`;
+}
+
 function buildSpecializedPrompt(name: string, prompt: string, preamble?: string): string {
-	const lines = [`You are OpenViktor, an AI coworker in the "${name}" Slack workspace.`];
+	const lines = [buildIdentityLine(name)];
 	if (preamble) lines.push(preamble);
 	lines.push("", prompt);
 	return lines.join("\n");
@@ -90,7 +95,7 @@ export function buildSystemPrompt(ctx: PromptContext): string {
 
 function buildCronPrompt(ctx: PromptContext): string {
 	const lines = [
-		`You are OpenViktor, an AI coworker in the "${ctx.workspaceName}" Slack workspace.`,
+		buildIdentityLine(ctx.workspaceName),
 		`You are executing a scheduled cron job: "${ctx.cronJobName ?? "Unknown"}".`,
 		"",
 	];
@@ -123,7 +128,7 @@ function buildCronPrompt(ctx: PromptContext): string {
 
 function buildInteractivePrompt(ctx: PromptContext): string {
 	const lines = [
-		`You are OpenViktor, an AI coworker in the "${ctx.workspaceName}" Slack workspace.`,
+		buildIdentityLine(ctx.workspaceName),
 		"You are helpful, knowledgeable, and concise. You communicate like a capable team member — clear, direct, and friendly.",
 		"",
 		"## Startup",
@@ -139,6 +144,7 @@ function buildInteractivePrompt(ctx: PromptContext): string {
 		"- If you don't know something, say so honestly.",
 		"- Match the energy of the conversation — casual for casual, detailed for technical.",
 		...buildErrorRules(),
+		...buildClientWorkRules(),
 		"",
 		"## Response Delivery",
 		"- **Always send your response using `coworker_send_slack_message`** with the channel and thread_ts from your context.",
@@ -190,6 +196,16 @@ function buildInteractivePrompt(ctx: PromptContext): string {
 	}
 
 	return lines.join("\n");
+}
+
+function buildClientWorkRules(): string[] {
+	return [
+		"",
+		"## Client Work",
+		"- Treat everything you learn in this workspace as confidential to this workspace. Never repeat one client's information to another client.",
+		"- Anything that leaves this Slack workspace (emails, posts, CRM or calendar changes, messages to external people) must go through an approval request first — draft it, show it, and wait.",
+		"- When you commit to a follow-up, schedule it so it actually happens rather than relying on memory.",
+	];
 }
 
 function buildErrorRules(): string[] {

@@ -1,7 +1,7 @@
 # Service account for Cloud Run
 resource "google_service_account" "cloud_run" {
-  account_id   = "openviktor-bot"
-  display_name = "OpenViktor Bot"
+  account_id   = "laneassistant-bot"
+  display_name = "Lane Assistant Bot"
 }
 
 # Grant Cloud SQL client role
@@ -14,7 +14,7 @@ resource "google_project_iam_member" "cloud_run_sql" {
 # Artifact Registry repository
 resource "google_artifact_registry_repository" "bot" {
   location      = var.region
-  repository_id = "openviktor"
+  repository_id = "laneassistant"
   format        = "DOCKER"
 
   depends_on = [google_project_service.apis]
@@ -22,7 +22,7 @@ resource "google_artifact_registry_repository" "bot" {
 
 # Cloud Run service
 resource "google_cloud_run_v2_service" "bot" {
-  name     = "openviktor-bot"
+  name     = "laneassistant-bot"
   location = var.region
   ingress  = "INGRESS_TRAFFIC_ALL"
 
@@ -33,7 +33,7 @@ resource "google_cloud_run_v2_service" "bot" {
     }
 
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/openviktor/bot:latest"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/laneassistant/bot:latest"
 
       ports {
         container_port = 3001

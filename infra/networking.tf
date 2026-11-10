@@ -1,13 +1,13 @@
 # VPC for Cloud Run <-> Cloud SQL private connectivity
 resource "google_compute_network" "vpc" {
-  name                    = "openviktor-vpc"
+  name                    = "laneassistant-vpc"
   auto_create_subnetworks = false
 
   depends_on = [google_project_service.apis]
 }
 
 resource "google_compute_subnetwork" "subnet" {
-  name          = "openviktor-subnet"
+  name          = "laneassistant-subnet"
   ip_cidr_range = "10.0.0.0/24"
   network       = google_compute_network.vpc.id
   region        = var.region
@@ -15,7 +15,7 @@ resource "google_compute_subnetwork" "subnet" {
 
 # Serverless VPC connector for Cloud Run
 resource "google_vpc_access_connector" "connector" {
-  name          = "openviktor-connector"
+  name          = "laneassistant-connector"
   region        = var.region
   ip_cidr_range = "10.8.0.0/28"
   network       = google_compute_network.vpc.name
@@ -25,7 +25,7 @@ resource "google_vpc_access_connector" "connector" {
 
 # Reserve IP range for private services
 resource "google_compute_global_address" "private_ip" {
-  name          = "openviktor-private-ip"
+  name          = "laneassistant-private-ip"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16

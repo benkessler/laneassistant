@@ -4,7 +4,6 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json bun.lock* ./
 COPY apps/bot/package.json apps/bot/
-COPY apps/landing/package.json apps/landing/
 COPY apps/web/package.json apps/web/
 COPY packages/shared/package.json packages/shared/
 COPY packages/db/package.json packages/db/
@@ -13,15 +12,15 @@ COPY packages/integrations/package.json packages/integrations/
 RUN bun install --frozen-lockfile
 
 FROM base AS dev
-RUN apt-get update && apt-get install -y --no-install-recommends ripgrep && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ripgrep curl ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN bun install && bun run --cwd packages/db db:generate
-CMD ["sh", "-c", "bun run --filter @openviktor/db db:migrate:deploy && bun --watch run apps/bot/src/index.ts"]
+CMD ["sh", "-c", "bun run --filter @laneassistant/db db:migrate:deploy && bun --watch run apps/bot/src/index.ts"]
 
 FROM base AS runner
-RUN apt-get update && apt-get install -y --no-install-recommends ripgrep && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ripgrep curl ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN bun install && bun run --cwd packages/db db:generate
-CMD ["sh", "-c", "bun run --filter @openviktor/db db:migrate:deploy && bun run apps/bot/src/index.ts"]
+RUN bun install && bun run --cwd packages/db db:generate && bun run --filter @laneassistant/web build
+CMD ["sh", "-c", "bun run --filter @laneassistant/db db:migrate:deploy && bun run apps/bot/src/index.ts"]

@@ -1,17 +1,21 @@
-import type { ToolResult } from "@openviktor/shared";
+import type { ToolResult } from "@laneassistant/shared";
+import { createWorkspaceToolToken } from "./tool-token.js";
 
 export class ToolGatewayClient {
 	private baseUrl: string;
-	private token: string;
 	private timeoutMs: number;
 
-	constructor(opts: { baseUrl: string; token: string; timeoutMs?: number }) {
+	constructor(opts: { baseUrl: string; timeoutMs?: number }) {
 		this.baseUrl = opts.baseUrl.replace(/\/+$/, "");
-		this.token = opts.token;
 		this.timeoutMs = opts.timeoutMs ?? 600_000;
 	}
 
-	async call(toolName: string, args: Record<string, unknown>): Promise<ToolResult> {
+	/** Executes a tool inside the given workspace's sandbox. */
+	async call(
+		toolName: string,
+		args: Record<string, unknown>,
+		workspaceId: string,
+	): Promise<ToolResult> {
 		const start = Date.now();
 		const controller = new AbortController();
 		const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -21,7 +25,7 @@ export class ToolGatewayClient {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: `Bearer ${this.token}`,
+					Authorization: `Bearer ${createWorkspaceToolToken(workspaceId)}`,
 				},
 				body: JSON.stringify({ role: toolName, arguments: args }),
 				signal: controller.signal,

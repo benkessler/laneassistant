@@ -1,4 +1,4 @@
-import type { LLMToolDefinition, ToolResult } from "@openviktor/shared";
+import type { LLMToolDefinition, ToolResult } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 
 export const coworkerText2ImDefinition: LLMToolDefinition = {

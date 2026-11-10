@@ -11,7 +11,7 @@ function timeAgo(iso: string): string {
 	return `${days}d ago`;
 }
 
-const TOKEN_KEY = "ov_admin_token";
+const TOKEN_KEY = "la_admin_token";
 
 function getToken(): string | null {
 	return localStorage.getItem(TOKEN_KEY);
@@ -155,7 +155,9 @@ export function SuperadminPage() {
 	return (
 		<div className="min-h-screen bg-slate-50">
 			<nav className="border-b border-slate-200 bg-white px-6 h-14 flex items-center">
-				<h1 className="text-sm font-bold tracking-wide text-slate-900">OPENVIKTOR SUPERADMIN</h1>
+				<h1 className="text-sm font-bold tracking-wide text-slate-900">
+					LANE ASSISTANT SUPERADMIN
+				</h1>
 			</nav>
 			<main className="max-w-6xl mx-auto p-6 space-y-6">
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

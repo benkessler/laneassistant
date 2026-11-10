@@ -4,14 +4,14 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-echo "=== OpenViktor Dev (Modal backend) ==="
+echo "=== Lane Assistant Dev (Modal backend) ==="
 echo ""
 
 # ─── .env ───────────────────────────────────────────────
 if [ ! -f ".env" ]; then
-  if [ -f "docker/.env.example" ]; then
-    cp docker/.env.example .env
-    echo "Created .env from docker/.env.example"
+  if [ -f ".env.example" ]; then
+    cp .env.example .env
+    echo "Created .env from .env.example"
     echo ""
     echo "  Edit .env with your credentials before continuing:"
     echo "    - SLACK_BOT_TOKEN"
@@ -39,14 +39,14 @@ secret_output=$(modal secret list 2>&1) || {
   echo "  $secret_output"
   exit 1
 }
-if ! echo "$secret_output" | grep -q "openviktor-tools"; then
-  echo "Modal secret 'openviktor-tools' not found — creating from .env..."
+if ! echo "$secret_output" | grep -q "laneassistant-tools"; then
+  echo "Modal secret 'laneassistant-tools' not found — creating from .env..."
   token=$(grep -oP '^MODAL_AUTH_TOKEN=\K.+' .env 2>/dev/null || true)
   if [ -z "$token" ]; then
     echo "Error: MODAL_AUTH_TOKEN not set in .env"
     exit 1
   fi
-  modal secret create openviktor-tools "TOOL_TOKEN=$token" 2>/dev/null || true
+  modal secret create laneassistant-tools "TOOL_TOKEN=$token" 2>/dev/null || true
   unset token
   echo ""
 fi

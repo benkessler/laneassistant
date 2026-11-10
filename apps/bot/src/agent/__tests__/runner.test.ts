@@ -1,4 +1,4 @@
-import type { LLMResponse } from "@openviktor/shared";
+import type { LLMResponse } from "@laneassistant/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentRunner, type ApprovalGateConfig, type RunTrigger } from "../runner.js";
 
@@ -25,7 +25,7 @@ vi.mock("../gateway.js", () => ({
 function makeResponse(overrides: Partial<LLMResponse> = {}): LLMResponse {
 	return {
 		id: "msg_test",
-		content: [{ type: "text", text: "Hello from Viktor!" }],
+		content: [{ type: "text", text: "Hello from Lane Assistant!" }],
 		stopReason: "end_turn",
 		model: "claude-sonnet-4-20250514",
 		inputTokens: 100,
@@ -76,6 +76,9 @@ function makePrisma() {
 		},
 		toolCall: {
 			create: vi.fn().mockResolvedValue({}),
+		},
+		workspace: {
+			findUnique: vi.fn().mockResolvedValue({ settings: {} }),
 		},
 	};
 }
@@ -166,7 +169,7 @@ describe("AgentRunner", () => {
 			expect.objectContaining({
 				data: expect.objectContaining({
 					role: "assistant",
-					content: "Hello from Viktor!",
+					content: "Hello from Lane Assistant!",
 				}),
 			}),
 		);
@@ -183,7 +186,7 @@ describe("AgentRunner", () => {
 			}),
 		);
 
-		expect(result.responseText).toBe("Hello from Viktor!");
+		expect(result.responseText).toBe("Hello from Lane Assistant!");
 		expect(result.agentRunId).toBe(RUN_ID);
 		expect(result.threadId).toBe(THREAD_ID);
 		expect(result.inputTokens).toBe(100);
@@ -206,6 +209,51 @@ describe("AgentRunner", () => {
 		expect(chatCall[1]).toEqual({ role: "user", content: "First question" });
 		expect(chatCall[2]).toEqual({ role: "assistant", content: "First answer" });
 		expect(chatCall[3]).toEqual({ role: "user", content: "What is TypeScript?" });
+	});
+
+	describe("model selection", () => {
+		it("uses the model chosen on the dashboard when no trigger model is set", async () => {
+			prisma.workspace.findUnique.mockResolvedValue({
+				settings: { defaultModel: "claude-opus-5-5" },
+			});
+			mockChat.mockResolvedValue(makeResponse());
+
+			await runner.run(makeTrigger());
+
+			expect(mockChat.mock.calls[0][1]).toEqual({ model: "claude-opus-5-5" });
+			expect(prisma.agentRun.create).toHaveBeenCalledWith(
+				expect.objectContaining({ data: expect.objectContaining({ model: "claude-opus-5-5" }) }),
+			);
+		});
+
+		it("ignores a dashboard model from a different provider", async () => {
+			prisma.workspace.findUnique.mockResolvedValue({ settings: { defaultModel: "gpt-4o" } });
+			mockChat.mockResolvedValue(makeResponse());
+
+			await runner.run(makeTrigger());
+
+			expect(mockChat.mock.calls[0][1]).toEqual({ model: "claude-sonnet-4-20250514" });
+		});
+
+		it("prefers an explicit trigger model over the dashboard setting", async () => {
+			prisma.workspace.findUnique.mockResolvedValue({
+				settings: { defaultModel: "claude-opus-5-5" },
+			});
+			mockChat.mockResolvedValue(makeResponse());
+
+			await runner.run(makeTrigger({ model: "claude-haiku-5-5" }));
+
+			expect(mockChat.mock.calls[0][1]).toEqual({ model: "claude-haiku-5-5" });
+			expect(prisma.workspace.findUnique).not.toHaveBeenCalled();
+		});
+	});
+
+	it("returns a user-facing message when the model declines", async () => {
+		mockChat.mockResolvedValue({ ...makeResponse(), content: [], stopReason: "refusal" });
+
+		const result = await runner.run(makeTrigger());
+
+		expect(result.responseText).toContain("can't help with that request");
 	});
 
 	it("marks run as FAILED on LLM error", async () => {
@@ -288,10 +336,11 @@ describe("AgentRunner", () => {
 
 		const result = await toolRunner.run(makeTrigger());
 
-		expect(mockClient.call).toHaveBeenCalledWith("bash", {
-			command: "echo hello world",
-			_agentRunId: RUN_ID,
-		});
+		expect(mockClient.call).toHaveBeenCalledWith(
+			"bash",
+			{ command: "echo hello world", _agentRunId: RUN_ID },
+			WORKSPACE_ID,
+		);
 
 		expect(prisma.toolCall.create).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -379,6 +428,7 @@ describe("AgentRunner", () => {
 		const chatOptions = mockChat.mock.calls[0][1];
 		expect(chatOptions).toEqual({
 			tools: [{ name: "bash", description: "Run shell", input_schema: { type: "object" } }],
+			model: "claude-sonnet-4-20250514",
 		});
 	});
 
@@ -591,10 +641,11 @@ describe("AgentRunner", () => {
 		expect(toolNames).toContain("mcp_pd_sheets_add_row");
 
 		// Verify the hot-loaded tool was actually executed
-		expect(mockClient.call).toHaveBeenCalledWith("mcp_pd_sheets_add_row", {
-			data: "test",
-			_agentRunId: RUN_ID,
-		});
+		expect(mockClient.call).toHaveBeenCalledWith(
+			"mcp_pd_sheets_add_row",
+			{ data: "test", _agentRunId: RUN_ID },
+			WORKSPACE_ID,
+		);
 	});
 
 	it("does not hot-load for non-integration skills", async () => {
@@ -746,7 +797,7 @@ describe("AgentRunner", () => {
 
 		const result = await runner.run(makeTrigger());
 
-		expect(result.responseText).toBe("Hello from Viktor!");
+		expect(result.responseText).toBe("Hello from Lane Assistant!");
 		expect(logger.warn).toHaveBeenCalledWith(
 			expect.objectContaining({ threadId: THREAD_ID }),
 			"Failed to generate thread summary, using truncation",
@@ -883,11 +934,11 @@ describe("AgentRunner — Approval Gate", () => {
 		);
 
 		expect(mockClient.call).toHaveBeenCalledTimes(2);
-		expect(mockClient.call).toHaveBeenLastCalledWith("mcp_pd_sheets_add_row", {
-			data: "test",
-			_agentRunId: RUN_ID,
-			_approvedRequestId: PERMISSION_REQUEST_ID,
-		});
+		expect(mockClient.call).toHaveBeenLastCalledWith(
+			"mcp_pd_sheets_add_row",
+			{ data: "test", _agentRunId: RUN_ID, _approvedRequestId: PERMISSION_REQUEST_ID },
+			WORKSPACE_ID,
+		);
 	});
 
 	it("returns error to LLM when permission is rejected", async () => {

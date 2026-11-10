@@ -54,5 +54,5 @@ resource "google_project_iam_member" "github_deploy" {
 variable "github_repo" {
   description = "GitHub repository (owner/repo)"
   type        = string
-  default     = "zggf-zggf/openviktor"
+  default     = "benkessler/laneassistant"
 }

@@ -4,14 +4,14 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-echo "=== OpenViktor Dev ==="
+echo "=== Lane Assistant Dev ==="
 echo ""
 
 # ─── .env ───────────────────────────────────────────────
 if [ ! -f ".env" ]; then
-  if [ -f "docker/.env.example" ]; then
-    cp docker/.env.example .env
-    echo "Created .env from docker/.env.example"
+  if [ -f ".env.example" ]; then
+    cp .env.example .env
+    echo "Created .env from .env.example"
     echo ""
     echo "  Edit .env with your credentials before continuing:"
     echo "    - SLACK_BOT_TOKEN"

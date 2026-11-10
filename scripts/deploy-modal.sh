@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-echo "=== OpenViktor Modal Deploy ==="
+echo "=== Lane Assistant Modal Deploy ==="
 echo ""
 
 # ─── Check modal CLI ────────────────────────────────────
@@ -21,8 +21,8 @@ secret_output=$(modal secret list 2>&1) || {
   echo "  $secret_output"
   exit 1
 }
-if ! echo "$secret_output" | grep -q "openviktor-tools"; then
-  echo "Modal secret 'openviktor-tools' not found."
+if ! echo "$secret_output" | grep -q "laneassistant-tools"; then
+  echo "Modal secret 'laneassistant-tools' not found."
   echo ""
   read -rsp "Enter a TOOL_TOKEN for authenticating requests: " token
   echo ""
@@ -30,7 +30,7 @@ if ! echo "$secret_output" | grep -q "openviktor-tools"; then
     echo "Error: token cannot be empty."
     exit 1
   fi
-  modal secret create openviktor-tools "TOOL_TOKEN=$token"
+  modal secret create laneassistant-tools "TOOL_TOKEN=$token"
   unset token
   echo ""
 fi

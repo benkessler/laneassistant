@@ -1,13 +1,13 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { Logger } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { Logger } from "@laneassistant/shared";
 import { estimateRunsPerDay } from "./cron-parser.js";
 
 // Tier 1: cheap/fast for simple checks. Tier 2: standard for conditional work.
-// Tier 3: same as tier 2 for now — upgrade to opus when cost-justified.
+// Tier 3: full capability for the hardest scheduled work.
 const DEFAULT_MODELS: Record<number, string> = {
-	1: "claude-haiku-4-5-20251001",
-	2: "claude-sonnet-4-20250514",
-	3: "claude-sonnet-4-20250514",
+	1: "claude-haiku-5-5",
+	2: "claude-sonnet-5-5",
+	3: "claude-opus-5-5",
 };
 
 const HIGH_FREQUENCY_THRESHOLD = 6;

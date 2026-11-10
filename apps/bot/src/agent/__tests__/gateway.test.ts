@@ -1,5 +1,5 @@
-import { LLMError } from "@openviktor/shared";
-import type { EnvConfig, LLMResponse } from "@openviktor/shared";
+import { LLMError } from "@laneassistant/shared";
+import type { EnvConfig, LLMResponse } from "@laneassistant/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LLMGateway, extractText } from "../gateway.js";
 import { createProvider } from "../providers/index.js";

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import type { LLMToolDefinition, ToolResult } from "@openviktor/shared";
+import type { LLMToolDefinition, ToolResult } from "@laneassistant/shared";
 import type { ToolExecutor } from "../registry.js";
 import { resolveSafePath } from "../workspace.js";
 

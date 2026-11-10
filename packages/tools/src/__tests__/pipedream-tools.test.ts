@@ -1,4 +1,4 @@
-import type { PipedreamAction } from "@openviktor/integrations";
+import type { PipedreamAction } from "@laneassistant/integrations";
 import { describe, expect, it } from "vitest";
 import { extractToolSchemas, generateSkillContent } from "../tools/integrations/pipedream-tools.js";
 

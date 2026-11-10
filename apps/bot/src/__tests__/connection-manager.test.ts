@@ -1,4 +1,4 @@
-import { encrypt } from "@openviktor/shared";
+import { encrypt } from "@laneassistant/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	ConnectionManager,

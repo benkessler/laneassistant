@@ -14,7 +14,7 @@ locals {
 
 resource "google_secret_manager_secret" "secrets" {
   for_each  = toset(local.secrets)
-  secret_id = "openviktor-${each.value}"
+  secret_id = "laneassistant-${each.value}"
 
   replication {
     auto {}

@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@openviktor/db";
-import { ConcurrencyExceededError, ThreadLockedError, ThreadPhase } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import { ConcurrencyExceededError, ThreadLockedError, ThreadPhase } from "@laneassistant/shared";
 import type {
 	ContentBlock,
 	LLMMessage,
@@ -8,7 +8,7 @@ import type {
 	Logger,
 	ToolUseBlock,
 	TriggerType,
-} from "@openviktor/shared";
+} from "@laneassistant/shared";
 import {
 	PERMISSION_POLL_INTERVAL_MS,
 	PERMISSION_TIMEOUT_MS,
@@ -16,7 +16,7 @@ import {
 	type ToolGatewayClient,
 	extractToolSchemas,
 	isPermissionRequired,
-} from "@openviktor/tools";
+} from "@laneassistant/tools";
 import type { ConcurrencyLimiter } from "../thread/concurrency.js";
 import { transitionPhase } from "../thread/lifecycle.js";
 import type { ThreadLock } from "../thread/lock.js";
@@ -31,6 +31,7 @@ import {
 } from "./context.js";
 import { type ChatOptions, type LLMGateway, extractText } from "./gateway.js";
 import { type PromptContext, buildSystemPrompt } from "./prompt.js";
+import { resolveProvider } from "./providers/index.js";
 import { isContextOverflow } from "./retry.js";
 
 const MAX_TOOL_ROUNDS = 20;
@@ -194,7 +195,7 @@ export class AgentRunner {
 		await this.ensureThreadNotLocked(thread.id);
 
 		const systemPrompt = buildSystemPrompt(trigger.promptContext);
-		const model = trigger.model ?? this.llm.getModel();
+		const model = await this.resolveModel(trigger);
 
 		const agentRun = await this.prisma.agentRun.create({
 			data: {
@@ -233,10 +234,11 @@ export class AgentRunner {
 
 			const { messages, summaryUsage } = await this.buildMessages(thread, systemPrompt);
 			const executeResult = await this.execute(
+				trigger.workspaceId,
 				agentRun.id,
 				thread.id,
 				messages,
-				trigger.model,
+				model,
 				trigger.slackChannel,
 				trigger.slackThreadTs,
 				callbacks,
@@ -321,6 +323,29 @@ export class AgentRunner {
 				lockAcquired,
 			);
 		}
+	}
+
+	/**
+	 * Picks the model for a run: an explicit trigger model (e.g. a cron's tier), else the
+	 * model chosen on the dashboard Settings page, else DEFAULT_MODEL. A dashboard choice
+	 * is ignored if it belongs to a different provider than the one configured at startup.
+	 */
+	private async resolveModel(trigger: RunTrigger): Promise<string> {
+		if (trigger.model) return trigger.model;
+		const fallback = this.llm.getModel();
+		try {
+			const workspace = await this.prisma.workspace.findUnique({
+				where: { id: trigger.workspaceId },
+				select: { settings: true },
+			});
+			const chosen = (workspace?.settings as Record<string, unknown> | null)?.defaultModel;
+			if (typeof chosen === "string" && resolveProvider(chosen) === resolveProvider(fallback)) {
+				return chosen;
+			}
+		} catch (err) {
+			this.logger.warn({ err, workspaceId: trigger.workspaceId }, "Could not read workspace model");
+		}
+		return fallback;
 	}
 
 	private async ensureThreadNotLocked(threadId: string): Promise<void> {
@@ -539,6 +564,7 @@ export class AgentRunner {
 	}
 
 	private async execute(
+		workspaceId: string,
 		agentRunId: string,
 		threadId: string,
 		messages: LLMMessage[],
@@ -584,6 +610,19 @@ export class AgentRunner {
 			totalOutputTokens += response.outputTokens;
 			totalCostCents += response.costCents;
 
+			if (response.stopReason === "refusal") {
+				this.logger.warn({ agentRunId, model: response.model }, "Model declined the request");
+				return {
+					responseText:
+						extractText(response.content) ||
+						"I can't help with that request. If you think this was a mistake, try rephrasing it.",
+					messageSent,
+					inputTokens: totalInputTokens,
+					outputTokens: totalOutputTokens,
+					costCents: totalCostCents,
+				};
+			}
+
 			if (response.stopReason !== "tool_use") {
 				return {
 					responseText: extractText(response.content),
@@ -613,6 +652,7 @@ export class AgentRunner {
 			messages.push({ role: "assistant", content: response.content });
 
 			const { toolResults, sentMessage, hotLoadedTools } = await this.processToolRound(
+				workspaceId,
 				toolUses,
 				agentRunId,
 				threadId,
@@ -656,6 +696,7 @@ export class AgentRunner {
 	}
 
 	private async processToolRound(
+		workspaceId: string,
 		toolUses: ToolUseBlock[],
 		agentRunId: string,
 		threadId: string,
@@ -678,6 +719,7 @@ export class AgentRunner {
 			}
 			callbacks?.onProgress?.({ phase: "tool_start", toolName: toolUse.name, round });
 			const { block, rawOutput } = await this.executeToolWithOutput(
+				workspaceId,
 				toolUse,
 				agentRunId,
 				threadId,
@@ -748,6 +790,7 @@ export class AgentRunner {
 	}
 
 	private async reExecuteApprovedTool(
+		workspaceId: string,
 		toolUse: ToolUseBlock,
 		agentRunId: string,
 		permissionRequestId: string,
@@ -758,7 +801,7 @@ export class AgentRunner {
 			_approvedRequestId: permissionRequestId,
 		};
 
-		const reResult = await this.toolConfig?.client.call(toolUse.name, approvedInput);
+		const reResult = await this.toolConfig?.client.call(toolUse.name, approvedInput, workspaceId);
 		if (!reResult) {
 			return {
 				block: {
@@ -808,6 +851,7 @@ export class AgentRunner {
 	}
 
 	private async handlePermissionGate(
+		workspaceId: string,
 		permissionOutput: PermissionRequiredOutput,
 		toolUse: ToolUseBlock,
 		agentRunId: string,
@@ -866,7 +910,7 @@ export class AgentRunner {
 				"Permission approved, re-executing tool",
 			);
 			await transitionPhase(this.prisma, threadId, ThreadPhase.TOOL_LOOP);
-			return this.reExecuteApprovedTool(toolUse, agentRunId, permissionRequestId);
+			return this.reExecuteApprovedTool(workspaceId, toolUse, agentRunId, permissionRequestId);
 		}
 
 		if (result.status === "rejected") {
@@ -903,6 +947,7 @@ export class AgentRunner {
 	}
 
 	private async executeToolWithOutput(
+		workspaceId: string,
 		toolUse: ToolUseBlock,
 		agentRunId: string,
 		threadId?: string,
@@ -936,10 +981,11 @@ export class AgentRunner {
 		const inputWithContext = { ...toolUse.input, _agentRunId: agentRunId };
 
 		this.logger.info({ tool: toolUse.name, agentRunId }, "Calling tool gateway");
-		const result = await this.toolConfig.client.call(toolUse.name, inputWithContext);
+		const result = await this.toolConfig.client.call(toolUse.name, inputWithContext, workspaceId);
 
 		if (result.output && isPermissionRequired(result.output)) {
 			return this.handlePermissionGate(
+				workspaceId,
 				result.output,
 				toolUse,
 				agentRunId,

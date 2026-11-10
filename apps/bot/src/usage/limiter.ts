@@ -1,5 +1,5 @@
-import type { PrismaClient } from "@openviktor/db";
-import type { Logger } from "@openviktor/shared";
+import type { PrismaClient } from "@laneassistant/db";
+import type { Logger } from "@laneassistant/shared";
 
 const DEFAULT_MONTHLY_BUDGET_CENTS = 2000; // $20 per workspace
 

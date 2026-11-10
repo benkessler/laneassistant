@@ -1,6 +1,6 @@
-import type { PipedreamClient } from "@openviktor/integrations";
-import type { Logger } from "@openviktor/shared";
-import type { IntegrationSyncHandler } from "@openviktor/tools";
+import type { PipedreamClient } from "@laneassistant/integrations";
+import type { Logger } from "@laneassistant/shared";
+import type { IntegrationSyncHandler } from "@laneassistant/tools";
 
 interface PendingConnection {
 	workspaceId: string;

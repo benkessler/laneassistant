@@ -22,7 +22,7 @@ export interface ActiveThreadInfo {
 }
 
 export async function fetchActiveThreads(
-	prisma: Pick<import("@openviktor/db").PrismaClient, "thread">,
+	prisma: Pick<import("@laneassistant/db").PrismaClient, "thread">,
 	workspaceId: string,
 ): Promise<ActiveThreadInfo[]> {
 	const threads = await prisma.thread.findMany({

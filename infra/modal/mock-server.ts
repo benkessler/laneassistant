@@ -5,7 +5,7 @@
  * Usage: bun run infra/modal/mock-server.ts
  * Then set: TOOL_BACKEND=modal MODAL_ENDPOINT_URL=http://localhost:3002
  */
-import { createNativeRegistry, ensureWorkspace } from "@openviktor/tools";
+import { createNativeRegistry, ensureWorkspace } from "@laneassistant/tools";
 
 const registry = createNativeRegistry();
 const port = Number(process.env.MOCK_MODAL_PORT ?? 3002);

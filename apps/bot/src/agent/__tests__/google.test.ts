@@ -1,4 +1,4 @@
-import type { LLMMessage } from "@openviktor/shared";
+import type { LLMMessage } from "@laneassistant/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GoogleProvider } from "../providers/google.js";
 
