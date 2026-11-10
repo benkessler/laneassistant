@@ -1,0 +1,23 @@
+{
+	"installCommand": "bun install",
+	"buildCommand": "bun run --filter @openviktor/web build",
+	"outputDirectory": "apps/web/dist",
+	"rewrites": [
+		{ "source": "/slack/:path*", "destination": "https://api.openviktor.com/slack/:path*" },
+		{ "source": "/api/:path*", "destination": "https://api.openviktor.com/api/:path*" },
+		{ "source": "/((?!slack/|api/).*)", "destination": "/index.html" }
+	],
+	"headers": [
+		{
+			"source": "/api/(.*)",
+			"headers": [
+				{ "key": "Access-Control-Allow-Origin", "value": "*" },
+				{ "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+				{
+					"key": "Access-Control-Allow-Headers",
+					"value": "Content-Type, Authorization, X-Workspace-Id"
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,473 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Workspace & Identity ───────────────────────────────
+
+model Workspace {
+  id                String   @id @default(cuid())
+  slackTeamId       String   @unique @map("slack_team_id")
+  slackTeamName     String   @map("slack_team_name")
+  slackBotToken     String   @map("slack_bot_token")
+  slackBotUserId    String   @map("slack_bot_user_id")
+  slackAppToken     String?  @map("slack_app_token")
+  installedBy       String?  @map("installed_by")
+  oauthAccessToken  String?  @map("oauth_access_token")
+  oauthRefreshToken String?  @map("oauth_refresh_token")
+  isActive          Boolean  @default(true) @map("is_active")
+  settings          Json     @default("{}")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  members             Member[]
+  agentRuns           AgentRun[]
+  cronJobs            CronJob[]
+  learnings           Learning[]
+  skills              Skill[]
+  threads             Thread[]
+  integrationAccounts IntegrationAccount[]
+  permissionRequests  PermissionRequest[]
+  toolDefinitions     ToolDefinition[]
+  spaces              Space[]
+  subscription        Subscription?
+  usageRecords        UsageRecord[]
+
+  @@map("workspaces")
+}
+
+model Member {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  slackUserId String   @map("slack_user_id")
+  displayName String?  @map("display_name")
+  profile     Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  agentRuns AgentRun[]
+
+  @@unique([workspaceId, slackUserId])
+  @@map("members")
+}
+
+// ─── Agent Execution ────────────────────────────────────
+
+model AgentRun {
+  id           String      @id @default(cuid())
+  workspaceId  String      @map("workspace_id")
+  threadId     String?     @map("thread_id")
+  triggeredBy  String?     @map("triggered_by")
+  triggerType  TriggerType @map("trigger_type")
+  cronJobId    String?     @map("cron_job_id")
+  status       RunStatus   @default(QUEUED)
+  model        String      @default("claude-sonnet")
+  systemPrompt String?     @map("system_prompt")
+  inputTokens  Int         @default(0) @map("input_tokens")
+  outputTokens Int         @default(0) @map("output_tokens")
+  costCents    Float       @default(0) @map("cost_cents")
+  durationMs   Int?        @map("duration_ms")
+  errorMessage String?     @map("error_message")
+  metadata     Json        @default("{}")
+  startedAt    DateTime?   @map("started_at")
+  completedAt  DateTime?   @map("completed_at")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  member    Member?    @relation(fields: [triggeredBy], references: [id])
+  thread    Thread?    @relation(fields: [threadId], references: [id])
+  cronJob   CronJob?   @relation(fields: [cronJobId], references: [id])
+  messages           Message[]
+  toolCalls          ToolCall[]
+  learnings          Learning[]
+  permissionRequests PermissionRequest[]
+
+  @@index([workspaceId, createdAt])
+  @@index([status])
+  @@index([cronJobId])
+  @@map("agent_runs")
+}
+
+enum TriggerType {
+  MENTION
+  DM
+  CRON
+  HEARTBEAT
+  DISCOVERY
+  ONBOARDING
+  MANUAL
+  SPAWN
+}
+
+enum RunStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Message {
+  id           String   @id @default(cuid())
+  agentRunId   String   @map("agent_run_id")
+  role         String
+  content      String
+  slackThreadTs String?  @map("slack_thread_ts")
+  slackChannel String?  @map("slack_channel")
+  tokenCount   Int      @default(0) @map("token_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  agentRun AgentRun @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+
+  @@index([agentRunId, createdAt])
+  @@map("messages")
+}
+
+// ─── Tool System ────────────────────────────────────────
+
+model ToolCall {
+  id           String    @id @default(cuid())
+  agentRunId   String    @map("agent_run_id")
+  toolName     String    @map("tool_name")
+  toolType     ToolType  @map("tool_type")
+  input        Json
+  output       Json?
+  status       RunStatus @default(RUNNING)
+  durationMs   Int?      @map("duration_ms")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  agentRun AgentRun @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+
+  @@index([agentRunId])
+  @@index([toolName])
+  @@map("tool_calls")
+}
+
+enum ToolType {
+  NATIVE
+  MCP
+  PIPEDREAM
+  CUSTOM
+}
+
+model ToolDefinition {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  name        String
+  description String
+  type        ToolType
+  schema      Json
+  endpoint    String?
+  enabled     Boolean  @default(true)
+  config      Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId, type])
+  @@map("tool_definitions")
+}
+
+// ─── Memory System ──────────────────────────────────────
+
+model Learning {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  agentRunId  String?  @map("agent_run_id")
+  content     String
+  source      String
+  category    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  agentRun  AgentRun? @relation(fields: [agentRunId], references: [id])
+
+  @@index([workspaceId, createdAt])
+  @@index([agentRunId])
+  @@map("learnings")
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  name        String
+  description String?
+  content     String
+  category    String?
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId, category])
+  @@map("skills")
+}
+
+// ─── Thread Orchestration ───────────────────────────────
+
+model Thread {
+  id              String       @id @default(cuid())
+  workspaceId     String       @map("workspace_id")
+  slackChannel    String       @map("slack_channel")
+  slackThreadTs   String       @map("slack_thread_ts")
+  path            String?      @map("path")
+  title           String?      @map("title")
+  parentThreadId  String?      @map("parent_thread_id")
+  status          ThreadStatus @default(ACTIVE)
+  phase           Int          @default(0)
+  lockedBy        String?      @map("locked_by")
+  lockedAt        DateTime?    @map("locked_at")
+  metadata        Json         @default("{}")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parentThread Thread?    @relation("ThreadHierarchy", fields: [parentThreadId], references: [id])
+  childThreads Thread[]   @relation("ThreadHierarchy")
+  agentRuns    AgentRun[]
+
+  @@unique([workspaceId, slackChannel, slackThreadTs])
+  @@unique([workspaceId, path])
+  @@index([status])
+  @@index([workspaceId, status])
+  @@index([parentThreadId])
+  @@map("threads")
+}
+
+enum ThreadStatus {
+  ACTIVE
+  WAITING
+  COMPLETED
+  STALE
+}
+
+// ─── Cron & Scheduling ──────────────────────────────────
+
+model CronJob {
+  id              String       @id @default(cuid())
+  workspaceId     String       @map("workspace_id")
+  name            String
+  schedule        String
+  description     String?
+  conditionScript String?      @map("condition_script")
+  agentPrompt     String       @map("agent_prompt")
+  costTier        Int          @default(1) @map("cost_tier")
+  enabled         Boolean      @default(true)
+  type            CronJobType  @default(CUSTOM)
+  slackChannel    String?      @map("slack_channel")
+  model           String?
+  scriptCommand   String?      @map("script_command")
+  dependentPaths  String[]     @default([]) @map("dependent_paths")
+  lastRunAt       DateTime?    @map("last_run_at")
+  nextRunAt       DateTime?    @map("next_run_at")
+  runCount        Int          @default(0) @map("run_count")
+  maxRuns         Int?         @map("max_runs")
+  lastRunStatus   RunStatus?   @map("last_run_status")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  agentRuns AgentRun[]
+
+  @@unique([workspaceId, name])
+  @@index([enabled, nextRunAt])
+  @@map("cron_jobs")
+}
+
+enum CronJobType {
+  HEARTBEAT
+  DISCOVERY
+  ONBOARDING
+  CHANNEL_INTRO
+  CUSTOM
+  SCRIPT
+}
+
+// ─── Spaces ─────────────────────────────────────────────
+
+model Space {
+  id             String      @id @default(cuid())
+  workspaceId    String      @map("workspace_id")
+  name           String
+  description    String?
+  status         SpaceStatus @default(INITIALIZING)
+  sandboxPath    String      @map("sandbox_path")
+  domain         String?     @unique
+  previewUrl     String?     @map("preview_url")
+  productionUrl  String?     @map("production_url")
+  convexUrlDev      String?     @map("convex_url_dev")
+  convexUrlProd     String?     @map("convex_url_prod")
+  convexProjectId   String?     @map("convex_project_id")
+  convexDevDeployKey  String?   @map("convex_dev_deploy_key")
+  convexProdDeployKey String?   @map("convex_prod_deploy_key")
+  vercelProjectId   String?     @map("vercel_project_id")
+  projectSecret     String      @map("project_secret")
+  lastDeployedAt DateTime?   @map("last_deployed_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  deployments SpaceDeployment[]
+  variables   SpaceVariable[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId, status])
+  @@map("spaces")
+}
+
+enum SpaceStatus {
+  INITIALIZING
+  READY
+  DEPLOYING
+  ACTIVE
+  FAILED
+  DELETED
+}
+
+model SpaceDeployment {
+  id               String            @id @default(cuid())
+  spaceId          String            @map("space_id")
+  environment      SpaceEnvironment
+  version          Int               @default(1)
+  status           SpaceDeployStatus @default(PENDING)
+  url              String?
+  vercelUrl        String?           @map("vercel_url")
+  convexDeployment String?           @map("convex_deployment")
+  commitMessage    String?           @map("commit_message")
+  buildLog         String?           @map("build_log")
+  durationMs       Int?              @map("duration_ms")
+  createdAt        DateTime          @default(now()) @map("created_at")
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, createdAt])
+  @@map("space_deployments")
+}
+
+enum SpaceEnvironment {
+  PREVIEW
+  PRODUCTION
+}
+
+enum SpaceDeployStatus {
+  PENDING
+  BUILDING
+  DEPLOYING
+  SUCCESS
+  FAILED
+}
+
+model SpaceVariable {
+  id        String   @id @default(cuid())
+  spaceId   String   @map("space_id")
+  key       String
+  value     String
+  isSecret  Boolean  @default(false) @map("is_secret")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  space Space @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@unique([spaceId, key])
+  @@map("space_variables")
+}
+
+// ─── Integrations ──────────────────────────────────────
+
+model IntegrationAccount {
+  id              String            @id @default(cuid())
+  workspaceId     String            @map("workspace_id")
+  provider        String            @default("pipedream")
+  appSlug         String            @map("app_slug")
+  appName         String            @map("app_name")
+  authProvisionId String            @map("auth_provision_id")
+  externalUserId  String            @map("external_user_id")
+  status          IntegrationStatus @default(ACTIVE)
+  connectedAt     DateTime          @default(now()) @map("connected_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, provider, authProvisionId])
+  @@index([workspaceId, provider])
+  @@map("integration_accounts")
+}
+
+enum IntegrationStatus {
+  ACTIVE
+  REVOKED
+}
+
+model PermissionRequest {
+  id             String           @id @default(cuid())
+  workspaceId    String           @map("workspace_id")
+  agentRunId     String           @map("agent_run_id")
+  toolName       String           @map("tool_name")
+  toolInput      Json             @map("tool_input")
+  status         PermissionStatus @default(PENDING)
+  slackChannel   String?          @map("slack_channel")
+  slackMessageTs String?          @map("slack_message_ts")
+  approvedBy     String?          @map("approved_by")
+  approvalCode   String?          @map("approval_code") @unique
+  expiresAt      DateTime         @map("expires_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  resolvedAt     DateTime?        @map("resolved_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  agentRun  AgentRun  @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@map("permission_requests")
+}
+
+enum PermissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+// ─── Billing & Usage (managed mode) ─────────────────────
+
+model Subscription {
+  id               String    @id @default(cuid())
+  workspaceId      String    @unique @map("workspace_id")
+  stripeCustomerId String    @unique @map("stripe_customer_id")
+  stripeSubId      String    @unique @map("stripe_sub_id")
+  stripePriceId    String    @map("stripe_price_id")
+  status           String    @default("active")
+  tier             String    @default("free")
+  currentPeriodEnd DateTime  @map("current_period_end")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model UsageRecord {
+  id             String   @id @default(cuid())
+  workspaceId    String   @map("workspace_id")
+  date           DateTime @db.Date
+  messageCount   Int      @default(0) @map("message_count")
+  tokenCount     Int      @default(0) @map("token_count")
+  toolExecutions Int      @default(0) @map("tool_executions")
+  llmCostCents   Int      @default(0) @map("llm_cost_cents")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, date])
+  @@index([workspaceId, date])
+  @@map("usage_records")
+}
